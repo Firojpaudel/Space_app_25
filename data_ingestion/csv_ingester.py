@@ -67,16 +67,15 @@ class CSVPublicationIngester(BaseIngester):
         Returns:
             bool: True if record is valid
         """
-        # Check required fields for PMC CSV format (Title, Link)
-        required_fields = ['Title']
+        # Check required fields - handle both uppercase and lowercase
+        title_field = record.get('Title') or record.get('title')
         
-        for field in required_fields:
-            if not record.get(field) or pd.isna(record.get(field)):
-                self.logger.warning(f"Missing required field '{field}' in record")
-                return False
+        if not title_field or pd.isna(title_field):
+            self.logger.warning(f"Missing required field 'Title/title' in record")
+            return False
         
         # Check title length
-        title = str(record.get('Title', ''))
+        title = str(title_field)
         if len(title.strip()) < 10:
             self.logger.warning(f"Title too short: {title[:50]}...")
             return False
@@ -93,22 +92,45 @@ class CSVPublicationIngester(BaseIngester):
         Returns:
             Publication: Transformed publication
         """
-        # Clean and extract basic fields from PMC CSV format
-        title = clean_text(str(record.get('Title', '')))
-        url = str(record.get('Link', '')) if record.get('Link') and not pd.isna(record.get('Link')) else None
+        # Clean and extract basic fields - handle both uppercase and lowercase
+        title_field = record.get('Title') or record.get('title')
+        title = clean_text(str(title_field)) if title_field else ''
+        url_field = record.get('Link') or record.get('url')
+        url = str(url_field) if url_field and not pd.isna(url_field) else None
         
-        # PMC CSV doesn't have abstract, authors, etc. - we'll extract from title only
-        abstract = None  # Could be fetched from PMC API later
-        authors = []     # Could be fetched from PMC API later
+        # Extract additional fields from our enhanced CSV format
+        abstract_field = record.get('Abstract') or record.get('abstract')
+        abstract = clean_text(str(abstract_field)) if abstract_field and not pd.isna(abstract_field) else None
         
-        # Parse publication date - not in PMC CSV, will be None
+        authors_field = record.get('Authors') or record.get('authors')
+        authors = str(authors_field).split(', ') if authors_field and not pd.isna(authors_field) else []
+        
+        journal_field = record.get('Journal') or record.get('journal')
+        journal = str(journal_field) if journal_field and not pd.isna(journal_field) else None
+        
+        # Parse publication date
         pub_date = None
+        date_field = record.get('Publication_Date') or record.get('publication_date')
+        if date_field and not pd.isna(date_field):
+            try:
+                pub_date = pd.to_datetime(str(date_field)).to_pydatetime()
+            except:
+                pass
         
-        # Extract keywords from title only
-        keywords = await extract_keywords(title)
+        # Extract DOI
+        doi_field = record.get('DOI') or record.get('doi')
+        doi = str(doi_field) if doi_field and not pd.isna(doi_field) else None
         
-        # Extract biological entities from title
-        entities = await extract_biological_entities(title)
+        # Extract keywords from CSV or generate from text
+        keywords_field = record.get('Keywords') or record.get('keywords')
+        if keywords_field and not pd.isna(keywords_field):
+            keywords = [k.strip() for k in str(keywords_field).split(',')]
+        else:
+            keywords = await extract_keywords(title)
+        
+        # Extract biological entities from title and abstract
+        text_for_entities = f"{title} {abstract or ''}"
+        entities = await extract_biological_entities(text_for_entities)
         
         # Extract PMC ID from URL
         pmcid = None
@@ -126,9 +148,9 @@ class CSVPublicationIngester(BaseIngester):
             title=title,
             abstract=abstract,
             authors=authors,
-            journal=None,  # Not available in PMC CSV
+            journal=journal,
             publication_date=pub_date,
-            doi=None,      # Not available in PMC CSV
+            doi=doi,
             url=url,
             keywords=keywords,
             mesh_terms=entities.get('mesh_terms', []),

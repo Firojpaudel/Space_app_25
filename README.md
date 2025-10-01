@@ -22,13 +22,13 @@
 
 ### Core Value Proposition
 
-K-OSMOS addresses the critical challenge of knowledge discovery in space biology research by providing researchers with an intelligent interface to explore, analyze, and synthesize information from over 608 peer-reviewed publications through advanced RAG (Retrieval-Augmented Generation) technology.
+K-OSMOS addresses the critical challenge of knowledge discovery in space biology research by providing researchers with an intelligent interface to explore, analyze, and synthesize information from over 1,175 space biology resources (608+ peer-reviewed publications + 567 NASA OSDR experimental datasets) through advanced RAG (Retrieval-Augmented Generation) technology.
 
 ### Key Capabilities
 
 **Intelligent Search & Discovery**
 - Natural language query processing with contextual understanding
-- Semantic similarity search across 608+ PMC space biology publications
+- Semantic similarity search across 1,175+ space biology resources (608+ PMC publications + 567 OSDR datasets)
 - Multi-modal filtering by mission, organism, tissue type, and research focus
 - Real-time source citation and evidence tracking
 
@@ -69,6 +69,7 @@ K-OSMOS addresses the critical challenge of knowledge discovery in space biology
 
 ### Data Sources & Integration
 - **Primary Dataset**: 608+ peer-reviewed publications from PMC space biology corpus
+- **NASA OSDR Integration**: 567 experimental datasets from NASA's Open Science Data Repository
 - **Web Scraping**: Automated extraction of research paper links and metadata
 - **CSV Data Processing**: Custom ingestion pipeline for structured research datasets
 - **RAG Implementation**: Advanced retrieval-augmented generation for contextual responses
@@ -106,6 +107,10 @@ source kosmos-env/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
+# Install NLP dependencies for enhanced entity extraction
+pip install spacy scispacy
+python -m spacy download en_core_web_sm
+
 # Configure environment variables
 cp .env.example .env
 # Edit .env file with your API keys (see API Configuration section)
@@ -116,8 +121,9 @@ python test_apis.py
 # Initialize system databases
 python main.py init
 
-# Load sample dataset
+# Load sample datasets
 python main.py ingest --csv-file data/raw/SB_publication_PMC.csv
+python scripts/ingest_data.py  # Includes both publications and OSDR datasets
 
 # Launch the application
 streamlit run kosmos_app.py
@@ -152,6 +158,304 @@ docker run -p 8501:8501 \
   kosmos-space-biology
 ```
 
+
+---
+
+## Data Ingestion into RAG System
+
+### Loading Data Sources into K-OSMOS
+
+K-OSMOS requires data to be ingested into the vector database to provide intelligent responses. Here are the methods to populate your RAG system:
+
+#### Method 1: Automated Complete Ingestion (Recommended)
+
+```bash
+# Run the complete data ingestion pipeline
+# This will ingest both publications and OSDR datasets
+python scripts/ingest_data.py
+
+# Skip TaskBook ingestion if not needed (faster)
+python scripts/ingest_data.py --skip-taskbook
+
+# Custom batch size for slower systems
+python scripts/ingest_data.py --batch-size 25
+```
+
+#### Method 2: Individual Data Source Ingestion
+
+**Ingest CSV Publications:**
+```bash
+# Load your own research papers from CSV
+python -c "
+import asyncio
+from data_ingestion.csv_ingester import CSVIngestionPipeline
+
+async def ingest():
+    pipeline = CSVIngestionPipeline(
+        file_path='data/raw/bioscience_publications.csv',
+        output_path='data/processed/publications.json'
+    )
+    publications = await pipeline.run(batch_size=50)
+    print(f'Ingested {len(publications)} publications')
+
+asyncio.run(ingest())
+"
+```
+
+**Ingest NASA OSDR Datasets:**
+```bash
+# Load experimental datasets from NASA OSDR
+python -c "
+import asyncio
+from data_ingestion.osdr_ingester import OSDRIngestionPipeline
+
+async def ingest():
+    pipeline = OSDRIngestionPipeline(
+        output_path='data/processed/osdr_datasets.json'
+    )
+    datasets = await pipeline.run(batch_size=50)
+    print(f'Ingested {len(datasets)} OSDR datasets')
+
+asyncio.run(ingest())
+"
+```
+
+#### Method 3: Quick Test with Sample Data
+
+```bash
+# Quick integration test with a few OSDR datasets
+python -c "
+import asyncio
+import sys
+sys.path.append('.')
+
+from config.settings import Settings
+from data_ingestion.osdr_ingester import OSDRIngester
+from vector_db.pinecone_client import PineconeDB
+from rag_system.embeddings import EmbeddingGenerator
+
+async def quick_test():
+    settings = Settings()
+    vector_db = PineconeDB(settings)
+    embedder = EmbeddingGenerator(settings)
+    
+    config = {'base_url': settings.osdr_base_url, 'api_key': settings.nasa_api_key}
+    ingester = OSDRIngester(config)
+    
+    count = 0
+    async for record in ingester.ingest():
+        if await ingester.validate_record(record):
+            dataset = await ingester.transform_record(record)
+            text = f'{dataset.title} {dataset.description or \"\"}'
+            embedding = await embedder.generate_embedding(text)
+            
+            if embedding:
+                document = {
+                    'id': dataset.id,
+                    'content': text,
+                    'embedding': embedding,
+                    'metadata': {
+                        'title': dataset.title,
+                        'type': 'dataset',
+                        'source': 'osdr',
+                        'organism': dataset.organism or '',
+                        'mission': dataset.mission or ''
+                    }
+                }
+                await vector_db.insert_documents('', [document])
+                print(f'✓ Loaded: {dataset.id}')
+                count += 1
+                if count >= 10: break
+    
+    print(f'Successfully loaded {count} datasets into RAG system')
+
+asyncio.run(quick_test())
+"
+```
+
+### Custom Data Sources
+
+#### Adding Your Own Research Papers
+
+Create a CSV file with the following format:
+
+```csv
+title,abstract,authors,journal,publication_date,doi,url,keywords
+"Your Research Title","Abstract text here","Author1, Author2","Journal Name",2024-01-15,10.1234/example,"https://example.com","keyword1, keyword2"
+```
+
+Then run:
+```bash
+python scripts/ingest_data.py --csv-file path/to/your/papers.csv
+```
+
+#### Adding Custom Datasets
+
+```python
+# custom_ingestion.py
+import asyncio
+from vector_db.pinecone_client import PineconeDB
+from rag_system.embeddings import EmbeddingGenerator
+from config.settings import Settings
+
+async def add_custom_data():
+    settings = Settings()
+    vector_db = PineconeDB(settings)
+    embedder = EmbeddingGenerator(settings)
+    
+    # Your custom data
+    documents = [
+        {
+            'title': 'Your Research Title',
+            'content': 'Full text content of your research...',
+            'metadata': {
+                'type': 'custom',
+                'source': 'your_lab',
+                'organism': 'mouse',
+                'mission': 'ground_study'
+            }
+        }
+    ]
+    
+    # Process and upload
+    for doc in documents:
+        embedding = await embedder.generate_embedding(doc['content'])
+        document = {
+            'id': f"custom_{hash(doc['title'])}",
+            'content': doc['content'],
+            'embedding': embedding,
+            'metadata': doc['metadata']
+        }
+        await vector_db.insert_documents('', [document])
+        print(f"✓ Added: {doc['title']}")
+
+asyncio.run(add_custom_data())
+```
+
+### Verification & Testing
+
+**Check Data Ingestion Status:**
+```bash
+# Verify data was loaded successfully
+python -c "
+import asyncio
+from config.settings import Settings
+from rag_system.chat import SpaceBiologyRAG
+
+async def test():
+    settings = Settings()
+    rag = SpaceBiologyRAG(settings)
+    results = await rag.search_similar_documents('microgravity bone density', top_k=5)
+    print(f'Found {len(results)} results in RAG system')
+    for r in results[:3]:
+        metadata = r.metadata if hasattr(r, 'metadata') else r.get('metadata', {})
+        print(f'- {metadata.get(\"title\", \"Unknown\")[:60]}...')
+
+asyncio.run(test())
+"
+```
+
+**Monitor Ingestion Progress:**
+```bash
+# Check processed data files
+ls -la data/processed/
+
+# View ingestion logs
+python scripts/ingest_data.py --verbose
+```
+
+### Data Requirements & Formats
+
+| Data Type | Required Fields | Optional Fields | Example Source |
+|-----------|----------------|-----------------|----------------|
+| **Publications** | `title`, `abstract` | `authors`, `journal`, `doi`, `keywords` | PubMed, ArXiv papers |
+| **Datasets** | `title`, `description` | `organism`, `mission`, `data_types` | NASA OSDR, lab studies |
+| **Projects** | `title`, `summary` | `pi_name`, `institution`, `funding` | NASA TaskBook, grants |
+
+### Troubleshooting Data Ingestion
+
+**Common Issues:**
+
+```bash
+# API connection issues
+python test_apis.py
+
+# Empty results after ingestion
+python -c "
+import json
+files = ['data/processed/publications.json', 'data/processed/osdr_datasets.json']
+for f in files:
+    try:
+        with open(f) as file:
+            data = json.load(file)
+            print(f'{f}: {len(data)} items')
+    except FileNotFoundError:
+        print(f'{f}: File not found')
+"
+
+# Vector database connection
+python -c "
+from config.settings import Settings
+from vector_db.pinecone_client import PineconeDB
+settings = Settings()
+db = PineconeDB(settings)
+print('Vector DB connection: OK' if db.index else 'Failed')
+"
+```
+
+**Performance Optimization:**
+- Use smaller batch sizes (10-25) for slower systems
+- Run ingestion during off-peak hours for API rate limits
+- Monitor memory usage for large datasets
+- Use `--skip-taskbook` flag if TaskBook data not needed
+
+---
+
+## Advanced NLP Setup
+
+### Enhanced Entity Extraction with spaCy/scispacy
+
+K-OSMOS uses advanced NLP models for extracting biological entities (organisms, tissues, genes, proteins) from text. For optimal performance, install these additional components:
+
+```bash
+# Install spaCy and scispacy for scientific text processing
+pip install spacy scispacy
+
+# Download the basic English model
+python -m spacy download en_core_web_sm
+
+# Optional: Install scientific models for better biology-specific extraction
+# (Note: These require more disk space but provide better scientific entity recognition)
+pip install https://huggingface.co/allenai/scispacy/resolve/main/en_core_sci_sm-0.6.2.tar.gz
+```
+
+**Entity Extraction Capabilities:**
+- **Organisms**: Mouse, human, plant, yeast, etc.
+- **Tissues**: Bone, muscle, brain, heart, liver, etc.
+- **Missions**: ISS, Apollo, Space Shuttle, etc.
+- **Genes & Proteins**: Scientific nomenclature recognition
+- **Gravity Conditions**: Microgravity, hypergravity detection
+
+> **Note**: If spaCy models are not available, K-OSMOS automatically falls back to pattern-based extraction, ensuring the system works without additional downloads.
+
+---
+
+## Data Sources Integration
+
+### NASA OSDR (Open Science Data Repository)
+
+K-OSMOS integrates with NASA's OSDR to provide access to **567 experimental datasets** covering:
+
+- **Space Biology Experiments**: Plant growth, animal studies, microorganism research
+- **Mission Data**: ISS, Apollo, Space Shuttle experimental results  
+- **Multi-organism Studies**: Mouse, plant, microbial, and cellular research
+- **Metadata Rich**: Complete experimental descriptions, protocols, and results
+
+**OSDR Integration Features:**
+- Automatic dataset discovery via NASA OSDR API
+- Real-time metadata extraction and processing
+- Semantic search across experimental descriptions
+- Cross-referencing with related publications
 
 ---
 
@@ -283,7 +587,7 @@ graph TB
         direction TB
         C1["🌲 Pinecone Vector DB<br/>──────────────────<br/>Embeddings Storage<br/>Semantic Search"]
         C2["🗄️ SQLite Database<br/>─────────────────<br/>Chat Sessions<br/>User History"]
-        C3["📚 PMC Publications<br/>─────────────────<br/>608+ Research Papers<br/>Scraped Content"]
+        C3["📚 Space Biology Data<br/>─────────────────<br/>608+ PMC Publications<br/>567 OSDR Datasets"]
     end
     
     %% Flow connections with labels
@@ -341,8 +645,9 @@ flowchart TD
     
     subgraph STORAGE ["💽 DATA SOURCES"]
         J[("📚 PMC Papers<br/>608+ Publications")]
-        K[("📌 Vector DB<br/>Embeddings")]
-        L[("🗄️ Chat History<br/>Previous Context")]
+        K[("🧪 OSDR Datasets<br/>567 Experiments")]
+        L[("📌 Vector DB<br/>Embeddings")]
+        M[("🗄️ Chat History<br/>Previous Context")]
     end
     
     %% Main flow
@@ -356,9 +661,10 @@ flowchart TD
     H --> I
     
     %% Data connections
-    J -.->|"Feed Content"| D
-    K -.->|"Semantic Match"| D
-    L -.->|"Context"| F
+    J -.->|"Publications"| D
+    K -.->|"Experiments"| D
+    L -.->|"Semantic Match"| D
+    M -.->|"Context"| F
     
     %% Enhanced styling
     classDef inputStyle fill:#e8f5e8,stroke:#2e7d32,stroke-width:3px,color:#000,font-weight:bold
@@ -371,7 +677,7 @@ flowchart TD
     class B,C,D,E processStyle
     class F,G aiStyle
     class H,I outputStyle
-    class J,K,L storageStyle
+    class J,K,L,M storageStyle
 ```
 
 </div>

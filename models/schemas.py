@@ -20,6 +20,7 @@ class GravityCondition(str, Enum):
     PARTIAL_GRAVITY = "partial_gravity"
     HYPERGRAVITY = "hypergravity"
     EARTH_GRAVITY = "earth_gravity"
+    GROUND_CONTROL = "ground_control"
 
 
 class StudyType(str, Enum):

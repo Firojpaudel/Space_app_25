@@ -85,23 +85,42 @@ class BiologicalEntityExtractor:
             logger.warning("spaCy and scispacy not available, using pattern-based extraction")
             return
         
-        try:
-            # Load scientific English model
-            self.nlp = spacy.load(ModelConfig.SCISPACY_MODEL)
-            
-            # Add entity linker for MeSH terms (if available)
+        # Try loading different models in order of preference
+        models_to_try = [
+            "en_core_sci_lg",
+            "en_core_sci_md", 
+            "en_core_sci_sm",
+            "en_core_web_lg",
+            "en_core_web_md",
+            "en_core_web_sm"
+        ]
+        
+        for model_name in models_to_try:
             try:
-                self.entity_linker = EntityLinker(
-                    resolve_abbreviations=True,
-                    name="mesh"
-                )
-                self.nlp.add_pipe(self.entity_linker)
-            except:
-                logger.warning("Could not load MeSH entity linker")
+                self.nlp = spacy.load(model_name)
+                logger.info(f"Successfully loaded spaCy model: {model_name}")
                 
-        except OSError:
-            logger.warning(f"Could not load {ModelConfig.SCISPACY_MODEL}, using basic extraction")
-            self.nlp = None
+                # Add entity linker for MeSH terms (if available and model is scientific)
+                if "sci" in model_name:
+                    try:
+                        self.entity_linker = EntityLinker(
+                            resolve_abbreviations=True,
+                            name="mesh"
+                        )
+                        self.nlp.add_pipe(self.entity_linker)
+                        logger.info("Added MeSH entity linker")
+                    except Exception as e:
+                        logger.warning(f"Could not load MeSH entity linker: {e}")
+                
+                return  # Successfully loaded a model
+                
+            except OSError:
+                logger.debug(f"Could not load {model_name}, trying next model")
+                continue
+        
+        # If no model could be loaded
+        logger.warning("Could not load any spaCy model, using pattern-based extraction only")
+        self.nlp = None
     
     async def extract_entities(self, text: str) -> Dict[str, List[str]]:
         """
