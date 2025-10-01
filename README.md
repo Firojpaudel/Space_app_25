@@ -1,7 +1,6 @@
 <div align="center">
   <img src="logo_kosmos.png" alt="K-OSMOS Logo" width="200" height="200">
   
-  # K-OSMOS
   ## Space Biology Knowledge Engine
   
   [![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
@@ -331,7 +330,7 @@ flowchart TD
     end
     
     subgraph AI ["🤖 AI GENERATION"]
-        F["� RAG Processing<br/>────────────<br/>Gemini 2.5 Flash<br/>+ Retrieved Context"]
+        F[" ⚙️ RAG Processing<br/>────────────<br/>Gemini 2.5 Flash<br/>+ Retrieved Context"]
         G["✨ Response Enhancement<br/>──────────────────<br/>Add Citations<br/>Format Output"]
     end
     
