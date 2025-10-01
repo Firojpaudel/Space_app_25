@@ -436,7 +436,8 @@ pip install https://huggingface.co/allenai/scispacy/resolve/main/en_core_sci_sm-
 - **Genes & Proteins**: Scientific nomenclature recognition
 - **Gravity Conditions**: Microgravity, hypergravity detection
 
-> **Note**: If spaCy models are not available, K-OSMOS automatically falls back to pattern-based extraction, ensuring the system works without additional downloads.
+> [!Note]
+> If spaCy models are not available, K-OSMOS automatically falls back to pattern-based extraction, ensuring the system works without additional downloads.
 
 ---
 

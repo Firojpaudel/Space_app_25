@@ -1635,7 +1635,7 @@ def render_visualizations(messages: List[Dict], all_sources: List[Dict]):
                         
                         # Add insights based on the chart
                         if tab_key == 'topics':
-                            st.markdown("**� Insights:** Topics mentioned most frequently in your conversation.")
+                            st.markdown("**💡 Insights:** Topics mentioned most frequently in your conversation.")
                         elif tab_key == 'relevance':
                             st.markdown("**💡 Insights:** Most relevant research papers for your queries.")
                         elif tab_key == 'journals':
@@ -1643,7 +1643,7 @@ def render_visualizations(messages: List[Dict], all_sources: List[Dict]):
                         elif tab_key == 'timeline':
                             st.markdown("**💡 Insights:** Publication timeline of relevant research.")
         else:
-            st.info("� Analytics will appear as you explore research topics!")
+            st.info(" ℹ️ Analytics will appear as you explore research topics!")
 
 def render_navbar():
     """Render the Chat History button at the top right of the page."""
