@@ -1,0 +1,153 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-space-grotesk: 'Space Grotesk', system-ui, sans-serif;
+  }
+
+  * {
+    @apply border-gray-200 dark:border-gray-700;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900 transition-colors duration-300;
+  }
+
+  .dark body {
+    @apply bg-gray-950 text-gray-100;
+  }
+}
+
+@layer components {
+  /* Scrollbar styling */
+  .custom-scrollbar::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-400 dark:bg-gray-600 rounded-full hover:bg-gray-500 dark:hover:bg-gray-500;
+  }
+
+  /* Entity highlights */
+  .entity-organism {
+    @apply bg-accent-50/20 text-accent-50 px-1 rounded cursor-pointer hover:bg-accent-50/30 transition-colors;
+  }
+
+  .entity-tissue {
+    @apply bg-accent-100/20 text-accent-100 px-1 rounded cursor-pointer hover:bg-accent-100/30 transition-colors;
+  }
+
+  .entity-gene {
+    @apply bg-accent-200/20 text-accent-200 px-1 rounded cursor-pointer hover:bg-accent-200/30 transition-colors;
+  }
+
+  .entity-protein {
+    @apply bg-accent-300/20 text-accent-300 px-1 rounded cursor-pointer hover:bg-accent-300/30 transition-colors;
+  }
+
+  .entity-mission {
+    @apply bg-accent-400/20 text-accent-400 px-1 rounded cursor-pointer hover:bg-accent-400/30 transition-colors;
+  }
+
+  /* Smooth transitions */
+  .smooth-transition {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg shadow-sm;
+  }
+
+  .card-hover {
+    @apply card hover:shadow-md hover:border-accent-200 dark:hover:border-accent-300 smooth-transition;
+  }
+
+  /* Input styles */
+  .input {
+    @apply w-full px-4 py-2 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border rounded-lg
+           focus:outline-none focus:ring-2 focus:ring-accent-200 dark:focus:ring-accent-300 smooth-transition;
+  }
+
+  /* Button styles */
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium smooth-transition focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply btn bg-accent-200 hover:bg-accent-100 text-white focus:ring-accent-200;
+  }
+
+  .btn-secondary {
+    @apply btn bg-light-card dark:bg-dark-card hover:bg-light-hover dark:hover:bg-dark-hover border border-light-border dark:border-dark-border;
+  }
+
+  .btn-ghost {
+    @apply btn hover:bg-light-hover dark:hover:bg-dark-hover;
+  }
+
+  /* Floating action button */
+  .fab {
+    @apply fixed bottom-6 right-6 w-14 h-14 bg-accent-200 hover:bg-accent-100 text-white rounded-full shadow-lg
+           flex items-center justify-center smooth-transition hover:scale-110 focus:outline-none focus:ring-2
+           focus:ring-accent-200 focus:ring-offset-2 z-50;
+  }
+
+  /* Popover */
+  .popover {
+    @apply absolute z-50 bg-light-card dark:bg-dark-card border border-light-border dark:border-dark-border
+           rounded-lg shadow-xl p-4 animate-scale-in;
+  }
+
+  /* Loading skeleton */
+  .skeleton {
+    @apply animate-pulse bg-gray-300 dark:bg-gray-700 rounded;
+  }
+
+  /* Citation badge */
+  .citation-badge {
+    @apply inline-flex items-center px-2 py-1 text-xs font-medium rounded-full
+           bg-accent-200/10 text-accent-200 hover:bg-accent-200/20 cursor-pointer smooth-transition;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-accent-100 to-accent-200 bg-clip-text text-transparent;
+  }
+
+  .glass-effect {
+    @apply backdrop-blur-md bg-opacity-80;
+  }
+}
+
+/* Custom animations */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 1000px 100%;
+}
