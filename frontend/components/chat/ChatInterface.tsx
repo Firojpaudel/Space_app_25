@@ -71,24 +71,26 @@ export default function ChatInterface() {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Messages Container */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar px-4 py-6">
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
           {messages.length === 0 ? (
-            <div className="h-full flex items-center justify-center">
-              <div className="text-center max-w-2xl mx-auto space-y-4">
-                <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-accent-100 to-accent-200 flex items-center justify-center">
+            <div className="h-full flex items-center justify-center px-4 py-6">
+              <div className="text-center max-w-2xl mx-auto space-y-6">
+                <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-gray-700 to-gray-800 dark:from-gray-600 dark:to-gray-700 flex items-center justify-center shadow-lg">
                   <span className="text-white font-bold text-2xl">K</span>
                 </div>
-                <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                  Welcome to K-OSMOS
-                </h2>
-                <p className="text-gray-600 dark:text-gray-300">
-                  Your AI-powered research assistant for space biology. Ask me anything about
-                  microgravity effects, space missions, or biological research in space.
-                </p>
-                <div className="text-xs text-gray-400 dark:text-gray-500 italic mt-2">
-                  Fun fact: Did you know astronauts can't cry properly in space? Tears don't fall - they just form bubbles around your eyes! 
+                <div className="space-y-2">
+                  <h2 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">
+                    Welcome to K-OSMOS
+                  </h2>
+                  <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
+                    Your AI-powered research assistant for space biology. Ask me anything about
+                    microgravity effects, space missions, or biological research in space.
+                  </p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-6">
+                <div className="text-sm text-gray-500 dark:text-gray-400 italic bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                  💡 Fun fact: Did you know astronauts can't cry properly in space? Tears don't fall - they just form bubbles around your eyes! 
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
                   {[
                     'Effects of microgravity on bone density',
                     'ISS cardiovascular research studies',
@@ -98,9 +100,11 @@ export default function ChatInterface() {
                     <button
                       key={index}
                       onClick={() => handleSendMessage(suggestion)}
-                      className="card-hover p-4 text-left text-sm"
+                      className="p-4 text-left text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-accent-200 dark:hover:border-accent-100 hover:shadow-sm transition-all duration-200 group"
                     >
-                      <p className="font-medium text-accent-200">{suggestion}</p>
+                      <p className="font-medium text-gray-800 dark:text-gray-200 group-hover:text-accent-200 dark:group-hover:text-accent-100 transition-colors">
+                        {suggestion}
+                      </p>
                     </button>
                   ))}
                 </div>
@@ -112,7 +116,7 @@ export default function ChatInterface() {
               </div>
             </div>
           ) : (
-            <div className="max-w-4xl mx-auto space-y-6">
+            <div className="max-w-4xl mx-auto px-4 py-6">
               {messages.map((message) => (
                 <MessageBubble key={message.id} message={message} />
               ))}
@@ -124,7 +128,7 @@ export default function ChatInterface() {
 
         {/* Input Area */}
         <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-          <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="max-w-4xl mx-auto px-4 py-6">
             <InputBox onSend={handleSendMessage} disabled={isLoading} />
           </div>
         </div>

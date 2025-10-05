@@ -169,6 +169,16 @@ class ChatDatabase:
             with sqlite3.connect(self.db_path, timeout=30.0) as conn:
                 cursor = conn.cursor()
                 
+                # Ensure session exists
+                cursor.execute("SELECT id FROM chat_sessions WHERE id = ?", (session_id,))
+                if not cursor.fetchone():
+                    # Create session if it doesn't exist
+                    cursor.execute("""
+                        INSERT INTO chat_sessions (id, title, created_at, updated_at)
+                        VALUES (?, ?, ?, ?)
+                    """, (session_id, f"Chat Session {datetime.now().strftime('%Y-%m-%d %H:%M')}", 
+                          datetime.now(), datetime.now()))
+                
                 # Add message
                 cursor.execute("""
                     INSERT INTO chat_messages (session_id, role, content, sources)
@@ -186,16 +196,18 @@ class ChatDatabase:
                 # Update session title based on first message if it's generic
                 if role == 'user':
                     cursor.execute("SELECT title FROM chat_sessions WHERE id = ?", (session_id,))
-                    current_title = cursor.fetchone()[0]
-                    
-                    if "Chat Session" in current_title:
-                        # Create a smart title from the first 50 characters
-                        smart_title = content[:50].strip()
-                        if len(content) > 50:
-                            smart_title += "..."
+                    current_title_row = cursor.fetchone()
+                    if current_title_row:
+                        current_title = current_title_row[0]
                         
-                        cursor.execute("UPDATE chat_sessions SET title = ? WHERE id = ?", 
-                                     (smart_title, session_id))
+                        if "Chat Session" in current_title:
+                            # Create a smart title from the first 50 characters
+                            smart_title = content[:50].strip()
+                            if len(content) > 50:
+                                smart_title += "..."
+                            
+                            cursor.execute("UPDATE chat_sessions SET title = ? WHERE id = ?", 
+                                         (smart_title, session_id))
                 
                 conn.commit()
                 return True

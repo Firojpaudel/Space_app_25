@@ -142,14 +142,21 @@ async def chat(
         entities = []
         try:
             extracted = await extractor.extract_entities(result.get("response", ""))
-            entities = [
-                {
-                    "type": entity.get("label", "unknown"),
-                    "value": entity.get("text", ""),
-                    "confidence": entity.get("score", 0.0)
-                }
-                for entity in extracted
-            ]
+            # Convert dictionary format to list format
+            for entity_type, entity_list in extracted.items():
+                if isinstance(entity_list, list):
+                    for entity_value in entity_list:
+                        entities.append({
+                            "type": entity_type,
+                            "value": entity_value,
+                            "confidence": 1.0
+                        })
+                elif entity_list:  # For single values like gravity_condition, study_type
+                    entities.append({
+                        "type": entity_type,
+                        "value": str(entity_list),
+                        "confidence": 1.0
+                    })
         except Exception as e:
             print(f"Entity extraction error: {e}")
         
@@ -168,12 +175,12 @@ async def chat(
         
         # Save to database
         try:
-            db.save_message(
+            db.add_message(
                 session_id=session_id,
                 role="user",
                 content=request.message
             )
-            db.save_message(
+            db.add_message(
                 session_id=session_id,
                 role="assistant",
                 content=result.get("response", ""),

@@ -26,9 +26,9 @@ export default function InputBox({ onSend, disabled }: InputBoxProps) {
   };
 
   return (
-    <div className="relative flex items-end gap-2">
+    <div className="relative flex items-end gap-3">
       {/* Input Field */}
-      <div className="flex-1 card rounded-2xl overflow-hidden">
+      <div className="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-2xl overflow-hidden shadow-sm focus-within:border-accent-200 dark:focus-within:border-accent-100 focus-within:shadow-md transition-all duration-200">
         <div className="flex items-end">
           <textarea
             value={input}
@@ -43,16 +43,16 @@ export default function InputBox({ onSend, disabled }: InputBoxProps) {
           
           <div className="flex items-center gap-1 px-2 pb-2">
             <button
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 smooth-transition"
+              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150"
               aria-label="Attach file"
             >
-              <Paperclip className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              <Paperclip className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             </button>
             <button
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 smooth-transition"
+              className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150"
               aria-label="Voice input"
             >
-              <Mic className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              <Mic className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             </button>
           </div>
         </div>
@@ -62,9 +62,9 @@ export default function InputBox({ onSend, disabled }: InputBoxProps) {
       <button
         onClick={handleSend}
         disabled={!input.trim() || disabled}
-        className={`flex-shrink-0 p-3 rounded-xl smooth-transition ${
+        className={`flex-shrink-0 p-3 rounded-xl transition-all duration-200 ${
           input.trim() && !disabled
-            ? 'bg-accent-200 hover:bg-accent-100 text-white shadow-lg shadow-accent-200/30'
+            ? 'bg-accent-200 hover:bg-accent-100 text-white shadow-lg hover:shadow-xl transform hover:scale-[1.02]'
             : 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
         }`}
         aria-label="Send message"
