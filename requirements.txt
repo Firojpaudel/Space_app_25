@@ -2,29 +2,24 @@ aiohappyeyeballs==2.6.1
 aiohttp==3.12.15
 aiosignal==1.4.0
 altair==5.5.0
-annotated-types @ file:///C:/b/abs_0dmaoyhhj3/croot/annotated-types_1709542968311/work
+annotated-types==0.7.0
 anyio==4.11.0
 attrs==25.3.0
-beautifulsoup4 @ file:///C:/b/abs_95vq944bnw/croot/beautifulsoup4-split_1756453107890/work
+beautifulsoup4==4.14.2
 biopython==1.85
 blinker==1.9.0
-blis==1.2.1
-brotlicffi @ file:///C:/b/abs_f4lixvzmxt/croot/brotlicffi_1736183286104/work
+blis==1.3.0
 cachetools==6.2.0
-catalogue @ file:///C:/b/abs_0d918n68qi/croot/catalogue_1703688198988/work
-certifi @ file:///C:/b/abs_2bz30lzohz/croot/certifi_1754570654565/work/certifi
-cffi @ file:///C:/b/abs_29_b57if3f/croot/cffi_1736184144340/work
-charset-normalizer @ file:///croot/charset-normalizer_1721748349566/work
-click @ file:///C:/b/abs_bbg7qqz4dk/croot/click_1754477951021/work
-cloudpathlib @ file:///C:/b/abs_e072ovcu54/croot/cloudpathlib_1745423368303/work
-colorama @ file:///C:/Users/dev-admin/perseverance-python-buildout/croot/colorama_1699472650914/work
-comtypes==1.4.12
-confection @ file:///C:/b/abs_c7k0lrp401/croot/confection_1750277652922/work
-conllu==6.0.0
+catalogue==2.0.10
+certifi==2025.8.3
+charset-normalizer==3.4.3
+click==8.3.0
+cloudpathlib==0.22.0
+colorama==0.4.6
+confection==0.1.5
 contourpy==1.3.3
 cycler==0.12.1
-cymem @ file:///C:/miniconda3/conda-bld/cymem_1756984401281/work
-en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl#sha256=1932429db727d4bff3deed6b34cfc05df17794f4a52eeb26cf8928f7c1a0fb85
+cymem==2.0.11
 fastapi==0.118.0
 filetype==1.2.0
 fonttools==4.60.1
@@ -47,8 +42,7 @@ httplib2==0.31.0
 httpx==0.28.1
 idna==3.10
 iniconfig==2.1.0
-Jinja2 @ file:///C:/b/abs_920kup4e6u/croot/jinja2_1741711580669/work
-joblib==1.5.2
+Jinja2==3.1.6
 jsonpatch==1.33
 jsonpointer==3.0.0
 jsonschema==4.25.1
@@ -58,25 +52,21 @@ langchain==0.3.27
 langchain-core==0.3.76
 langchain-google-genai==2.0.10
 langchain-text-splitters==0.3.11
-langcodes @ file:///C:/miniconda3/conda-bld/langcodes_1757574814012/work
+langcodes==3.5.0
 langsmith==0.4.31
-language_data @ file:///C:/miniconda3/conda-bld/language-data_1757509293737/work
-lxml==5.3.0
+language_data==1.3.0
+lxml==6.0.2
 lz4==4.4.4
-marisa-trie @ file:///C:/miniconda3/conda-bld/marisa-trie_1757503593376/work
-markdown-it-py @ file:///C:/b/abs_3espcrdl35/croot/markdown-it-py_1756299213703/work
-MarkupSafe @ file:///C:/b/abs_a0ma7ge0jc/croot/markupsafe_1738584052792/work
+marisa-trie==1.3.1
+markdown-it-py==4.0.0
+MarkupSafe==3.0.3
 matplotlib==3.10.6
-mdurl @ file:///C:/miniconda3/conda-bld/mdurl_1758552280927/work
-mkl-service==2.4.0
-mkl_fft @ file:///C:/Users/dev-admin/mkl/mkl_fft_1730823082242/work
-mkl_random @ file:///C:/Users/dev-admin/mkl/mkl_random_1730822522280/work
+mdurl==0.1.2
 multidict==6.6.4
-murmurhash @ file:///C:/b/abs_f1_1p5yg6_/croot/murmurhash_1741707831116/work
+murmurhash==1.0.13
 narwhals==2.6.0
 neo4j==5.28.2
-nmslib-metabrainz==2.1.3
-numpy==1.26.4
+numpy==2.3.3
 orjson==3.11.3
 packaging==24.2
 pandas==2.3.3
@@ -91,71 +81,57 @@ propcache==0.3.2
 proto-plus==1.26.1
 protobuf==5.29.5
 protoc-gen-openapiv2==0.0.1
-psutil==7.1.0
 pyarrow==21.0.0
 pyasn1==0.6.1
 pyasn1_modules==0.4.2
-pybind11==3.0.1
-pycparser @ file:///C:/miniconda3/conda-bld/pycparser_1757496054990/work
-pydantic @ file:///C:/miniconda3/conda-bld/pydantic_1758736883934/work
+pydantic==2.11.9
 pydantic-settings==2.11.0
-pydantic_core @ file:///C:/b/abs_d0xs0z3erk/croot/pydantic-core_1750754747982/work
+pydantic_core==2.33.2
 pydeck==0.9.1
-pygame==2.6.1
-Pygments @ file:///C:/b/abs_e4bg5vh5j_/croot/pygments_1744667628203/work
+Pygments==2.19.2
 pyparsing==3.2.5
-pypiwin32==223
-pysbd==0.3.4
-PySocks @ file:///C:/Users/dev-admin/perseverance-python-buildout/croot/pysocks_1699473336188/work
 pytest==8.4.2
 pytest-asyncio==1.2.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.1
-pyttsx3==2.99
 pytz==2025.2
-pywin32==311
 PyYAML==6.0.3
 referencing==0.36.2
-requests @ file:///C:/b/abs_f53smfvswb/croot/requests_1756709376206/work
+requests==2.32.5
 requests-toolbelt==1.0.0
-rich @ file:///C:/b/abs_8b92fzmygg/croot/rich_1732638991774/work
+rich==14.1.0
 rpds-py==0.27.1
 rsa==4.9.1
-scikit-learn==1.7.2
-scipy==1.16.2
-scispacy==0.6.2
 seaborn==0.13.2
 setuptools==80.9.0
-shellingham @ file:///C:/Users/dev-admin/perseverance-python-buildout/croot/shellingham_1699475566718/work
+shellingham==1.5.4
 six==1.17.0
-smart_open @ file:///C:/miniconda3/conda-bld/smart_open_1757580695104/work
+smart_open==7.3.1
 smmap==5.0.2
 sniffio==1.3.1
-soupsieve @ file:///C:/Users/dev-admin/perseverance-python-buildout/croot/soupsieve_1699496611169/work
-spacy @ file:///C:/b/abs_4eqj6u2dl4/croot/spacy_1729067668563/work
-spacy-legacy @ file:///C:/Users/dev-admin/perseverance-python-buildout/croot/spacy-legacy_1699496642242/work
-spacy-loggers @ file:///C:/Users/dev-admin/perseverance-python-buildout/croot/spacy-loggers_1699496673845/work
+soupsieve==2.8
+spacy==3.8.7
+spacy-legacy==3.0.12
+spacy-loggers==1.0.5
 SQLAlchemy==2.0.43
-srsly @ file:///C:/b/abs_610qoxca56/croot/srsly_1741858013545/work
+srsly==2.5.1
 starlette==0.48.0
 streamlit==1.50.0
 tenacity==9.1.2
-thinc==8.3.4
-threadpoolctl==3.6.0
+thinc==8.3.6
 toml==0.10.2
 tornado==6.5.2
-tqdm @ file:///C:/b/abs_0eh9b6xugj/croot/tqdm_1738945553987/work
+tqdm==4.67.1
 typer==0.19.2
-typing-inspection @ file:///C:/b/abs_261c5jt6kx/croot/typing-inspection_1746023491500/work
-typing_extensions @ file:///C:/b/abs_ecq8gc0vbm/croot/typing_extensions_1756281142218/work
+typing-inspection==0.4.1
+typing_extensions==4.15.0
 tzdata==2025.2
 uritemplate==4.2.0
-urllib3 @ file:///C:/b/abs_393g1ayee_/croot/urllib3_1750775481226/work
+urllib3==2.5.0
 uvicorn==0.37.0
-wasabi @ file:///C:/miniconda3/conda-bld/wasabi_1757345817066/work
+wasabi==1.1.3
 watchdog==6.0.0
-weasel @ file:///C:/b/abs_361ylfhsov/croot/weasel_1750282141652/work
-win-inet-pton @ file:///C:/Users/dev-admin/perseverance-python-buildout/croot/win_inet_pton_1699472992992/work
-wrapt @ file:///C:/b/abs_68gzx33lzh/croot/wrapt_1736543196433/work
+weasel==0.4.1
+wrapt==1.17.3
 yarl==1.20.1
 zstandard==0.25.0
