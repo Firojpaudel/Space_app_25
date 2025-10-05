@@ -13,10 +13,8 @@ fi
 if [ ! -d "venv" ]; then
     echo "📦 Creating virtual environment..."
     python -m venv venv
-    echo ""
 fi
 
-# Activate virtual environment
 echo "🔧 Activating virtual environment..."
 source venv/bin/activate
 
@@ -44,4 +42,4 @@ echo ""
 echo "Press Ctrl+C to stop the server"
 echo ""
 
-python api_server.py
+cd backend && python -m uvicorn api_server:app --host 0.0.0.0 --port 8000 --reload

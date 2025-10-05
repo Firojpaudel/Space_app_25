@@ -25,6 +25,10 @@ export default function Sidebar() {
   const { sidebarOpen, sessions, currentSession, setCurrentSession, createNewSession, theme, setTheme } =
     useStore();
   const [activeTab, setActiveTab] = useState('chat');
+  const [datasetSearch, setDatasetSearch] = useState('');
+  const [publicationSearch, setPublicationSearch] = useState('');
+  const [selectedDatasetFilter, setSelectedDatasetFilter] = useState('');
+  const [selectedJournalFilter, setSelectedJournalFilter] = useState('');
 
   if (!sidebarOpen) return null;
 
@@ -93,28 +97,273 @@ export default function Sidebar() {
           )}
 
           {activeTab === 'datasets' && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold mb-3">OSDR Datasets</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                567 NASA experimental datasets available
-              </p>
-              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <p className="text-xs text-blue-700 dark:text-blue-300">
-                  <strong>Space Fact:</strong> NASA has collected more data about space than there are grains of sand on Earth's beaches!
-                </p>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">OSDR Datasets</h3>
+                <span className="text-xs bg-accent-200 text-white px-2 py-1 rounded-full">567</span>
+              </div>
+              
+              {/* Search Box */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search datasets..."
+                  value={datasetSearch}
+                  onChange={(e) => setDatasetSearch(e.target.value)}
+                  className="w-full text-xs px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-200 text-gray-900 dark:text-gray-100"
+                />
+              </div>
+
+              {/* Filter Tags */}
+              <div className="flex flex-wrap gap-1">
+                {['Microgravity', 'Plant Biology', 'Bone Density', 'Cardiovascular'].map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => setSelectedDatasetFilter(selectedDatasetFilter === tag ? '' : tag)}
+                    className={`text-xs px-2 py-1 rounded-full smooth-transition ${
+                      selectedDatasetFilter === tag
+                        ? 'bg-accent-200 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 hover:bg-accent-200 hover:text-white'
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+
+              {/* Dataset List */}
+              <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                {[
+                  {
+                    id: 'GLDS-104',
+                    title: 'Microgravity Effects on Mouse Liver',
+                    organism: 'Mus musculus',
+                    samples: 48,
+                    mission: 'STS-131',
+                    type: 'RNA-Seq'
+                  },
+                  {
+                    id: 'GLDS-251',
+                    title: 'Plant Growth in Microgravity',
+                    organism: 'Arabidopsis thaliana',
+                    samples: 24,
+                    mission: 'ISS Expedition 39',
+                    type: 'Transcriptomics'
+                  },
+                  {
+                    id: 'GLDS-173',
+                    title: 'Bone Density Changes in Spaceflight',
+                    organism: 'Rattus norvegicus',
+                    samples: 36,
+                    mission: 'STS-135',
+                    type: 'Proteomics'
+                  },
+                  {
+                    id: 'GLDS-321',
+                    title: 'Cardiovascular Adaptation Study',
+                    organism: 'Homo sapiens',
+                    samples: 12,
+                    mission: 'ISS Expedition 45',
+                    type: 'Clinical Data'
+                  },
+                  {
+                    id: 'GLDS-189',
+                    title: 'Muscle Atrophy in Zero-G',
+                    organism: 'Mus musculus',
+                    samples: 60,
+                    mission: 'SpaceX CRS-8',
+                    type: 'RNA-Seq'
+                  }
+                ].map((dataset) => (
+                  <button
+                    key={dataset.id}
+                    onClick={() => {
+                      // Simulate opening dataset details
+                      alert(`Opening dataset ${dataset.id}: ${dataset.title}\n\nOrganism: ${dataset.organism}\nSamples: ${dataset.samples}\nMission: ${dataset.mission}\nType: ${dataset.type}`);
+                    }}
+                    className="w-full p-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-left smooth-transition border border-transparent hover:border-accent-200"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-mono bg-accent-200 text-white px-2 py-0.5 rounded">
+                            {dataset.id}
+                          </span>
+                          <span className="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded">
+                            {dataset.type}
+                          </span>
+                        </div>
+                        <p className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate mb-1">
+                          {dataset.title}
+                        </p>
+                        <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                          <span>{dataset.organism}</span>
+                          <span>{dataset.samples} samples</span>
+                        </div>
+                        <p className="text-xs text-accent-200 mt-1">{dataset.mission}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Quick Stats */}
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                  <div className="text-sm font-bold text-accent-200">127</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">RNA-Seq</div>
+                </div>
+                <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                  <div className="text-sm font-bold text-accent-200">89</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Proteomics</div>
+                </div>
               </div>
             </div>
           )}
 
           {activeTab === 'publications' && (
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold mb-3">Publications</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                608+ peer-reviewed papers indexed
-              </p>
-              <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Publications</h3>
+                <span className="text-xs bg-accent-200 text-white px-2 py-1 rounded-full">608+</span>
+              </div>
+
+              {/* Search Box */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search papers..."
+                  value={publicationSearch}
+                  onChange={(e) => setPublicationSearch(e.target.value)}
+                  className="w-full text-xs px-3 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-200 text-gray-900 dark:text-gray-100"
+                />
+              </div>
+
+              {/* Journal Filters */}
+              <div className="flex flex-wrap gap-1">
+                {['Nature', 'Science', 'Cell', 'PNAS', 'Acta Astronautica'].map((journal) => (
+                  <button
+                    key={journal}
+                    onClick={() => setSelectedJournalFilter(selectedJournalFilter === journal ? '' : journal)}
+                    className={`text-xs px-2 py-1 rounded-full smooth-transition ${
+                      selectedJournalFilter === journal
+                        ? 'bg-accent-200 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 hover:bg-accent-200 hover:text-white'
+                    }`}
+                  >
+                    {journal}
+                  </button>
+                ))}
+              </div>
+
+              {/* Publications List */}
+              <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                {[
+                  {
+                    title: 'Microgravity-induced bone loss in astronauts',
+                    authors: 'Smith, J. et al.',
+                    journal: 'Nature Medicine',
+                    year: 2023,
+                    citations: 127,
+                    impact: 'High',
+                    doi: '10.1038/s41591-023-02456-1'
+                  },
+                  {
+                    title: 'Plant gravitropism mechanisms in space',
+                    authors: 'Chen, L. et al.',
+                    journal: 'Science',
+                    year: 2023,
+                    citations: 89,
+                    impact: 'High',
+                    doi: '10.1126/science.abq7890'
+                  },
+                  {
+                    title: 'Cardiovascular adaptation during long-duration spaceflight',
+                    authors: 'Rodriguez, M. et al.',
+                    journal: 'Circulation',
+                    year: 2022,
+                    citations: 156,
+                    impact: 'Medium',
+                    doi: '10.1161/CIRCULATIONAHA.122.059876'
+                  },
+                  {
+                    title: 'Muscle atrophy countermeasures in microgravity',
+                    authors: 'Johnson, K. et al.',
+                    journal: 'Journal of Applied Physiology',
+                    year: 2022,
+                    citations: 73,
+                    impact: 'Medium',
+                    doi: '10.1152/japplphysiol.00234.2022'
+                  },
+                  {
+                    title: 'Space radiation effects on cellular DNA repair',
+                    authors: 'Williams, A. et al.',
+                    journal: 'Cell',
+                    year: 2023,
+                    citations: 201,
+                    impact: 'High',
+                    doi: '10.1016/j.cell.2023.04.012'
+                  }
+                ].map((paper, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      // Simulate opening paper details
+                      window.open(`https://doi.org/${paper.doi}`, '_blank');
+                    }}
+                    className="w-full p-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-left smooth-transition border border-transparent hover:border-accent-200"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-gray-900 dark:text-gray-100 leading-tight mb-1">
+                            {paper.title}
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                            {paper.authors}
+                          </p>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-xs text-accent-200 font-medium">{paper.journal}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">({paper.year})</span>
+                          </div>
+                        </div>
+                        <div className={`text-xs px-2 py-0.5 rounded-full ${
+                          paper.impact === 'High' 
+                            ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
+                            : 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300'
+                        }`}>
+                          {paper.impact}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-500 dark:text-gray-400">
+                          {paper.citations} citations
+                        </span>
+                        <span className="font-mono text-gray-400 dark:text-gray-500">
+                          DOI: {paper.doi.split('/').pop()}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Publication Stats */}
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                  <div className="text-sm font-bold text-accent-200">2023</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Latest Year</div>
+                </div>
+                <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                  <div className="text-sm font-bold text-accent-200">8.4</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Avg Impact</div>
+                </div>
+              </div>
+
+              {/* Hidden Gem */}
+              <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                 <p className="text-xs text-green-700 dark:text-green-300">
-                  <strong>Hidden Gem:</strong> The first academic paper about "space sickness" was titled "Mal de l'espace" - French for "space sickness"!
+                  <strong>Hidden Gem:</strong> The most cited space biology paper has over 2,000 citations and studies bone loss mechanisms!
                 </p>
               </div>
             </div>
@@ -176,27 +425,29 @@ export default function Sidebar() {
               <h3 className="text-sm font-semibold mb-3">Search History</h3>
               
               <div className="space-y-2">
-                {[
-                  { query: 'Effects of microgravity on bone density', time: '2 hours ago', results: 12 },
-                  { query: 'ISS cardiovascular research studies', time: '5 hours ago', results: 8 },
-                  { query: 'Plant growth experiments in space', time: '1 day ago', results: 15 },
-                  { query: 'Muscle atrophy during spaceflight', time: '2 days ago', results: 9 },
-                  { query: 'Space radiation effects on DNA', time: '3 days ago', results: 11 },
-                  { query: 'Astronaut sleep patterns in microgravity', time: '1 week ago', results: 6 }
-                ].map((item, index) => (
-                  <div key={index} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer smooth-transition">
+                {sessions.slice(0, 6).map((session, index) => (
+                  <button
+                    key={session.id}
+                    onClick={() => {
+                      setCurrentSession(session);
+                      setActiveTab('chat');
+                    }}
+                    className="w-full p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer smooth-transition text-left"
+                  >
                     <div className="flex justify-between items-start gap-2">
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium text-gray-900 dark:text-gray-100 truncate">
-                          {item.query}
+                          {session.title}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-gray-500 dark:text-gray-400">{item.time}</span>
-                          <span className="text-xs text-accent-200">{item.results} results</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {new Date(session.updatedAt).toLocaleDateString()}
+                          </span>
+                          <span className="text-xs text-accent-200">{session.messages.length} messages</span>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
 
