@@ -43,7 +43,13 @@ export default function ChatInterface() {
     }
 
     try {
+      console.log('Sending message to API:', content);
       const response = await chatAPI.sendMessage(content, currentSession?.id);
+      console.log('API response received:', {
+        responseLength: response.response?.length,
+        sourcesCount: response.sources?.length,
+        entitiesCount: response.entities?.length
+      });
 
       const assistantMessage: Message = {
         id: `msg-${Date.now() + 1}`,
@@ -56,13 +62,32 @@ export default function ChatInterface() {
 
       addMessage(assistantMessage);
       setSources(response.sources || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending message:', error);
+      console.error('Error details:', {
+        message: error?.message,
+        code: error?.code,
+        response: error?.response?.data,
+        status: error?.response?.status
+      });
+      
+      let errorContent = 'Sorry, I encountered an error processing your request. Please try again.';
+      
+      // Add more specific error information for debugging
+      if (error?.code === 'ECONNABORTED') {
+        errorContent = 'Request timeout. The AI is taking longer than expected to respond. Please try a shorter question.';
+      } else if (error?.response?.status >= 500) {
+        errorContent = 'Server error occurred. Please try again in a moment.';
+      } else if (error?.response?.status === 404) {
+        errorContent = 'API endpoint not found. Please check if the backend server is running.';
+      } else if (error?.response?.data?.detail) {
+        errorContent = `API Error: ${JSON.stringify(error.response.data.detail)}`;
+      }
       
       const errorMessage: Message = {
         id: `msg-${Date.now() + 1}`,
         role: 'assistant',
-        content: 'Sorry, I encountered an error processing your request. Please try again.',
+        content: errorContent,
         timestamp: new Date(),
       };
       

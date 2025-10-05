@@ -44,4 +44,4 @@ Write-Host ""
 Write-Host "Press Ctrl+C to stop the server" -ForegroundColor Yellow
 Write-Host ""
 
-python api_server.py
+python backend/api_server.py
