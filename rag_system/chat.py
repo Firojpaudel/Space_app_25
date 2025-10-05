@@ -53,27 +53,7 @@ class SpaceBiologyRAG:
             logger.error(f"Error searching documents: {e}")
             return []
     
-    def _format_web_context(self, web_sources: List[Dict[str, Any]]) -> str:
-        """Format web sources as context for the LLM."""
-        if not web_sources:
-            return "No web resources found."
-        
-        context_parts = []
-        for i, source in enumerate(web_sources, 1):
-            title = source.get('title', 'Unknown Title')
-            url = source.get('url', '')
-            description = source.get('description', '')
-            source_type = source.get('source_type', 'web')
-            
-            context_parts.append(f"""
-Web Resource {i}:
-Title: {title}
-URL: {url}
-Type: {source_type}
-Description: {description}
-""")
-        
-        return "\n".join(context_parts)
+
     
     def _format_context(self, documents) -> str:
         """Format retrieved documents as context for the LLM."""
@@ -86,19 +66,24 @@ Description: {description}
             metadata = doc.metadata if hasattr(doc, 'metadata') else {}
             title = metadata.get('title', 'Unknown Title')
             authors = metadata.get('authors', 'Unknown Authors')
+            journal = metadata.get('journal', 'Unknown Journal')
+            year = metadata.get('year', 'Unknown Year')
             
-            # Get text content
+            # Get text content - increased length for more context
             content = doc.content if hasattr(doc, 'content') else ''
-            content = content[:500]  # Limit to 500 chars
+            content = content[:1000]  # Increased to 1000 chars for more detail
             
             score = doc.score if hasattr(doc, 'score') else 0
             
             context_parts.append(f"""
-Document {i}:
+**Document {i}** (Reference ID: DOC-{i:03d}):
 Title: {title}
 Authors: {authors}
-Content: {content}...
-Score: {score:.3f}
+Journal: {journal}
+Year: {year}
+Relevance Score: {score:.3f}
+Content Excerpt: {content}...
+---
 """)
         
         return "\n".join(context_parts)
@@ -144,31 +129,41 @@ Score: {score:.3f}
                 conversation_context += f"{role}: {msg['content'][:300]}...\n"
             conversation_context += "\n"
         
-        return f"""You are K-OSMOS, an advanced space biology research assistant with access to both scientific publications AND web search capabilities. You have been enhanced with web search functionality and can provide links, images, and online resources.
+        return f"""Greetings! I am K-OSMOS (Knowledge-Oriented Space Medicine Operations System), your dedicated space research assistant with comprehensive access to NASA's space biology research database and extensive knowledge of all space research carried out by NASA and international space agencies.
 
-IMPORTANT: You CAN perform web searches and provide web resources, images, and external links. Do not say you cannot do web searches.
+As K-OSMOS, I specialize in providing extremely detailed, comprehensive information about space biology research, experiments, missions, and scientific discoveries based on my extensive database of scientific publications and research documents.
 
-Context from Space Biology Research Papers:
+**My Identity & Capabilities:**
+🛰️ **K-OSMOS** - Your AI-powered gateway to space biology research
+✓ Access to 1,175+ space biology resources (608+ peer-reviewed publications + 567 NASA OSDR experimental datasets)
+✓ Comprehensive knowledge of all NASA space research missions and experiments
+✓ Direct access to research papers, scientific publications, and mission documentation
+✓ Ability to provide detailed analysis with complete source citations from my database
+✓ Expert knowledge of space biology, microgravity effects, and space medicine
+
+**Research Database Context:**
 {context}
 {conversation_context}
-Current User Question: {query}
 
-Your Enhanced Capabilities:
-✓ Access to scientific research database
-✓ Web search for relevant resources and images  
-✓ Finding NASA links, educational content, and visual materials
-✓ Providing URLs to real scientific websites and resources
+**Your Question:** {query}
 
-Instructions:
-- Answer comprehensively using research papers AND web resources
-- When users ask for web searches, images, or online resources, provide them
-- Include relevant NASA links, educational websites, and scientific visualizations
-- For topics like "microgravity effects on skeletal systems", provide both research findings AND web resources
-- Cite specific papers and include web links in your responses
-- Focus on scientific accuracy from authoritative sources
-- Use technical terms appropriately but explain complex concepts
+**K-OSMOS Response Guidelines:**
+🔬 **Always provide EXTREMELY detailed responses** - I have no output token limitations and will give you comprehensive, complete information
+📚 **Always cite specific documents and sources** - I will reference exactly which research papers, studies, or documents I'm drawing information from my database
+🧬 **Technical depth with accessibility** - I provide scientific accuracy while explaining complex concepts clearly
+🚀 **Complete coverage** - I never cut off responses midway and provide full, thorough analysis
+📊 **Document-specific references** - I will always mention "According to Document X" or "As referenced in the study by [Author]" when citing sources
+🌐 **Web Search Requests** - If asked to search the web, I'll politely explain that web search capabilities are coming in future releases
 
-Answer:"""
+**Critical Instructions for K-OSMOS:**
+1. **ALWAYS start responses with** "Greetings! As K-OSMOS, I can provide you with comprehensive information..."
+2. **ALWAYS mention specific document references** using format "According to Document X (Reference ID: DOC-XXX)" or "As detailed in the research by [Author] in Document Y"
+3. **PROVIDE EXTREMELY DETAILED responses** - use the full 8192 token limit if needed, never cut responses short
+4. **NO OUTPUT LIMITATIONS** - provide complete, comprehensive analysis with full scientific detail
+5. **CITE SOURCES THROUGHOUT** - reference documents multiple times throughout the response, not just at the end
+6. **WEB SEARCH REQUESTS** - If asked to search the web or access online resources, respond cutely: "While I'd love to surf the web for you 🌐✨, my creators are working on web search capabilities for future releases! Stay tuned for exciting updates! For now, let me provide you with comprehensive information from my extensive research database..."
+
+**K-OSMOS Comprehensive Response:**"""
 
     async def chat(self, query: str, conversation_history: List[Dict[str, str]] = None, top_k: int = 15) -> Dict[str, Any]:
         """
@@ -191,16 +186,8 @@ Answer:"""
             # 2. Retrieve relevant documents (get more for better diversity)
             documents = await self.search_similar_documents(enhanced_query, top_k)
             
-            # 3. Get web search results for additional context and images
-            web_sources = await self._get_web_sources(query)
-            
-            # 4. Format context (will be deduplicated in _format_sources)
+            # 3. Format context from research documents
             context = self._format_context(documents)
-            
-            # 4.5. Add web sources to context if available
-            if web_sources:
-                web_context = self._format_web_context(web_sources)
-                context += f"\n\nAdditional Web Resources Available:\n{web_context}"
             
             # 5. Create prompt with conversation history
             prompt = self._create_prompt(query, context, conversation_history)
@@ -208,18 +195,14 @@ Answer:"""
             # 6. Generate response with Gemini
             response = await self._generate_response(prompt)
             
-            # 7. Format sources (includes deduplication and returns top 10 unique)
-            sources = self._format_sources(documents)[:10]  # Increased to 10 unique sources for display
-            
-            # 8. Add web sources to the mix
-            if web_sources:
-                sources.extend(web_sources)
+            # 6. Format sources (includes deduplication and returns top 10 unique)
+            sources = self._format_sources(documents)[:10]  # Top 10 unique research document sources
             
             return {
                 "response": response,
-                "sources": sources[:10],  # Keep top 10 total including web sources
+                "sources": sources,
                 "query": query,
-                "num_sources": len(sources[:10]),
+                "num_sources": len(sources),
                 "success": True
             }
             
@@ -244,6 +227,9 @@ Answer:"""
                 generation_config={
                     "temperature": self.settings.temperature,
                     "max_output_tokens": self.settings.max_tokens,
+                    "candidate_count": 1,
+                    "top_p": 0.95,
+                    "top_k": 40,
                 }
             )
             
@@ -251,11 +237,15 @@ Answer:"""
             response_text = response.text
             response_text = self._clean_response_content(response_text)
             
+            # Ensure K-OSMOS introduces itself if not already done
+            if not response_text.startswith("Greetings!") and not "K-OSMOS" in response_text[:200]:
+                response_text = f"Greetings! As K-OSMOS, your space research assistant, I can provide you with comprehensive information on this topic.\n\n{response_text}"
+            
             return response_text
             
         except Exception as e:
             logger.error(f"Error generating response: {e}")
-            return "I apologize, but I'm currently unable to generate a response. Please try again."
+            return "Greetings! I am K-OSMOS, your space research assistant. I apologize, but I'm currently experiencing technical difficulties. Please try asking your question again, and I'll provide you with comprehensive space biology research information."
     
     def _clean_response_content(self, content: str) -> str:
         """Clean response content to remove HTML tags and unwanted elements."""
@@ -331,282 +321,9 @@ Answer:"""
         query = f"What research was conducted during or related to the {mission} mission?"
         return await self.chat(query, top_k=7)
     
-    async def _get_web_sources(self, query: str) -> List[Dict[str, Any]]:
-        """
-        Get additional web sources and images related to the query.
-        Performs basic web searches for relevant scientific content.
-        """
-        web_sources = []
-        
-        try:            
-            # Extract search terms for better web search
-            search_terms = await self._extract_search_terms(query)
-            
-            if search_terms:
-                # Create specific web sources based on search terms
-                web_sources = await self._search_real_web_content(search_terms[:2])  # Limit to 2 terms
-                    
-        except Exception as e:
-            logger.error(f"Error getting web sources: {e}")
-        
-        return web_sources[:3]  # Return top 3 web sources
+
     
-    async def _extract_search_terms(self, query: str) -> List[str]:
-        """Extract key search terms from the query for web search."""
-        # Simple term extraction - in production, this could use NLP
-        space_bio_terms = [
-            'microgravity', 'space biology', 'ISS', 'astronaut', 'space station',
-            'bone density', 'muscle atrophy', 'space agriculture', 'plant growth',
-            'radiation effects', 'cardiovascular', 'neurological', 'cell biology',
-            'tissue engineering', 'space medicine', 'space research', 'NASA',
-            'spaceflight', 'zero gravity', 'Mars mission', 'lunar research',
-            'skeletal', 'bone', 'bones', 'skeleton', 'osteoporosis'
-        ]
-        
-        query_lower = query.lower()
-        found_terms = []
-        
-        for term in space_bio_terms:
-            if term.lower() in query_lower:
-                found_terms.append(term)
-        
-        # Add general terms if specific ones not found
-        if not found_terms:
-            found_terms = ['space biology research']
-        
-        return found_terms
+
     
-    async def _simulate_web_search(self, terms: List[str]) -> List[Dict[str, Any]]:
-        """
-        Enhanced web search results relevant to space biology research.
-        In production, this would call Google Custom Search or Bing Search APIs.
-        """
-        web_sources = []
-        
-        # Create term-specific sources that would realistically be found
-        source_templates = {
-            'microgravity': [
-                {
-                    "title": "Microgravity Effects on Human Physiology - NASA Research",
-                    "authors": "NASA Human Research Program",
-                    "journal": "NASA.gov",
-                    "url": "https://www.nasa.gov/hrp/research/microgravity-effects",
-                    "score": 0.94,
-                    "source_type": "web",
-                    "description": "Comprehensive analysis of microgravity impacts on human biological systems"
-                },
-                {
-                    "title": "Microgravity Research Facility Images",
-                    "authors": "NASA Image Gallery",
-                    "journal": "NASA Images",
-                    "url": "https://images.nasa.gov/search?q=microgravity%20research",
-                    "score": 0.87,
-                    "source_type": "image_source",
-                    "description": "Visual documentation of microgravity experiments and equipment"
-                }
-            ],
-            'bone density': [
-                {
-                    "title": "Bone Loss in Space: Current Research and Countermeasures",
-                    "authors": "Space Medicine Research Group",
-                    "journal": "Space Medicine Portal",
-                    "url": "https://spacemedicine.nasa.gov/bone-research",
-                    "score": 0.92,
-                    "source_type": "web",
-                    "description": "Latest research on bone density changes during spaceflight"
-                },
-                {
-                    "title": "Bone Density Scanning in Space - Visual Guide",
-                    "authors": "Medical Operations Team",
-                    "journal": "ISS Medical Research",
-                    "url": "https://iss-research.nasa.gov/bone-scanning-images",
-                    "score": 0.85,
-                    "source_type": "image_source",
-                    "description": "Medical imaging and scanning procedures for bone health monitoring in space"
-                }
-            ],
-            'space agriculture': [
-                {
-                    "title": "Growing Food in Space: Advanced Plant Habitat Results",
-                    "authors": "Kennedy Space Center Research",
-                    "journal": "NASA Plant Research",
-                    "url": "https://www.nasa.gov/plant-habitat-research",
-                    "score": 0.93,
-                    "source_type": "web",
-                    "description": "Recent advances in space-based plant growth systems and food production"
-                },
-                {
-                    "title": "Space Crops Photo Gallery - ISS Agricultural Experiments",
-                    "authors": "ISS Research Photography",
-                    "journal": "NASA ISS Gallery",
-                    "url": "https://images.nasa.gov/search?q=space%20plants%20ISS",
-                    "score": 0.89,
-                    "source_type": "image_source",
-                    "description": "Visual documentation of plant growth experiments conducted aboard the ISS"
-                }
-            ]
-        }
-        
-        # Default sources for general space biology queries
-        default_sources = [
-            {
-                "title": "Space Biology Research Database - Comprehensive Portal",
-                "authors": "NASA Ames Research Center",
-                "journal": "NASA GeneLab",
-                "url": "https://genelab.nasa.gov/",
-                "score": 0.96,
-                "source_type": "web",
-                "description": "Open science data repository for space biology research"
-            },
-            {
-                "title": "Space Biology Visual Resources Collection",
-                "authors": "NASA Scientific Visualization Studio",
-                "journal": "NASA SVS",
-                "url": "https://svs.nasa.gov/gallery/spacebiology",
-                "score": 0.88,
-                "source_type": "image_source",
-                "description": "Scientific visualizations and animations of space biology concepts"
-            },
-            {
-                "title": "International Space Station National Lab - Biology Research",
-                "authors": "ISS National Laboratory",
-                "journal": "ISS National Lab",
-                "url": "https://www.issnationallab.org/research/research-areas/biology/",
-                "score": 0.91,
-                "source_type": "web",
-                "description": "Commercial and academic biological research opportunities on the ISS"
-            }
-        ]
-        
-        # Match terms to specific sources
-        used_sources = []
-        for term in terms[:2]:  # Limit to 2 terms to avoid too many sources
-            term_lower = term.lower()
-            found_match = False
-            
-            for key, sources in source_templates.items():
-                if key in term_lower or any(word in term_lower for word in key.split()):
-                    used_sources.extend(sources[:2])  # Max 2 sources per term
-                    found_match = True
-                    break
-            
-            if not found_match:
-                # Use default sources if no specific match
-                used_sources.extend(default_sources[:1])
-        
-        # Add current year to all sources
-        current_year = "2024"
-        for source in used_sources:
-            source["year"] = current_year
-        
-        # Remove duplicates and limit total
-        seen_urls = set()
-        unique_sources = []
-        for source in used_sources:
-            if source["url"] not in seen_urls:
-                seen_urls.add(source["url"])
-                unique_sources.append(source)
-                
-        return unique_sources[:3]  # Return top 3 unique web sources
+
     
-    async def _search_real_web_content(self, terms: List[str]) -> List[Dict[str, Any]]:
-        """
-        Search for real web content related to space biology topics.
-        Returns actual URLs to NASA, scientific institutions, and educational resources.
-        """
-        web_sources = []
-        
-        # Real NASA and scientific institution links based on search terms
-        real_sources_map = {
-            'microgravity': [
-                {
-                    "title": "Microgravity Research - NASA Human Research Program",
-                    "authors": "NASA Human Research Program",
-                    "journal": "NASA.gov",
-                    "url": "https://www.nasa.gov/humans-in-space/human-research-program/",
-                    "score": 0.95,
-                    "source_type": "web",
-                    "description": "Official NASA research on human adaptation to microgravity environments",
-                    "year": "2024"
-                },
-                {
-                    "title": "Microgravity Science Research Images",
-                    "authors": "NASA Image Gallery",
-                    "journal": "NASA Images",
-                    "url": "https://images.nasa.gov/search?q=microgravity",
-                    "score": 0.88,
-                    "source_type": "image_source",
-                    "description": "Visual documentation of microgravity research and experiments",
-                    "year": "2024"
-                }
-            ],
-            'bone': [
-                {
-                    "title": "Space Medicine Research on Bone Health",
-                    "authors": "NASA Life Sciences",
-                    "journal": "NASA Science",
-                    "url": "https://www.nasa.gov/missions/station/research/benefits/bone-health/",
-                    "score": 0.93,
-                    "source_type": "web",
-                    "description": "Research on bone density changes during spaceflight missions",
-                    "year": "2024"
-                }
-            ],
-            'skeletal': [
-                {
-                    "title": "Space Biology Research Database",
-                    "authors": "NASA GeneLab",
-                    "journal": "NASA GeneLab",
-                    "url": "https://genelab.nasa.gov/",
-                    "score": 0.96,
-                    "source_type": "web",
-                    "description": "Open science repository for space biology research data",
-                    "year": "2024"
-                }
-            ],
-            'space': [
-                {
-                    "title": "International Space Station Research",
-                    "authors": "ISS National Laboratory",
-                    "journal": "ISS National Lab",
-                    "url": "https://www.issnationallab.org/research/",
-                    "score": 0.91,
-                    "source_type": "web",
-                    "description": "Current research projects and findings from the International Space Station",
-                    "year": "2024"
-                }
-            ]
-        }
-        
-        # Find matching sources for the terms
-        for term in terms:
-            term_lower = term.lower()
-            for key, sources in real_sources_map.items():
-                if key in term_lower or any(word in term_lower for word in key.split()):
-                    web_sources.extend(sources)
-                    break
-        
-        # If no specific matches, add general space biology sources
-        if not web_sources:
-            web_sources = [
-                {
-                    "title": "NASA Space Biology Research",
-                    "authors": "NASA Ames Research Center",
-                    "journal": "NASA.gov",
-                    "url": "https://www.nasa.gov/ames/research/space-biosciences/",
-                    "score": 0.90,
-                    "source_type": "web",
-                    "description": "NASA's comprehensive space biology research programs",
-                    "year": "2024"
-                }
-            ]
-        
-        # Remove duplicates based on URL
-        seen_urls = set()
-        unique_sources = []
-        for source in web_sources:
-            if source["url"] not in seen_urls:
-                seen_urls.add(source["url"])
-                unique_sources.append(source)
-        
-        return unique_sources[:3]

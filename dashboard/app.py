@@ -148,7 +148,7 @@ st.markdown("""
     }
     
     .assistant-message::before {
-        content: "🤖";
+        content: "🛰️";
         position: absolute;
         top: -8px;
         left: -8px;
@@ -508,7 +508,7 @@ def display_metrics(df):
 
 def display_chat_interface():
     """Display the enhanced chat interface."""
-    st.markdown('<h2 class="section-header">🤖 AI Research Assistant</h2>', unsafe_allow_html=True)
+    st.markdown('<h2 class="section-header">🛰️ K-OSMOS Research Assistant</h2>', unsafe_allow_html=True)
     
     # Chat container
     st.markdown('<div class="chat-container"><div class="chat-messages">', unsafe_allow_html=True)
@@ -531,7 +531,7 @@ def display_chat_interface():
     st.markdown('</div></div>', unsafe_allow_html=True)
     
     # Chat input
-    query = st.chat_input("Ask me about space biology research...", key="chat_input")
+    query = st.chat_input("Ask K-OSMOS about space biology research, experiments, and NASA missions...", key="chat_input")
     
     if query:
         # Add user message

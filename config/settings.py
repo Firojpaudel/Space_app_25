@@ -40,8 +40,8 @@ class Settings(BaseSettings):
     # Model Settings - Gemini (Free)
     embedding_model: str = Field(default="models/text-embedding-004", env="EMBEDDING_MODEL")
     llm_model: str = Field(default="gemini-2.5-flash", env="LLM_MODEL")
-    max_tokens: int = Field(default=4000, env="MAX_TOKENS")
-    temperature: float = Field(default=0.1, env="TEMPERATURE")
+    max_tokens: int = Field(default=8192, env="MAX_TOKENS")  # Increased for very detailed responses
+    temperature: float = Field(default=0.2, env="TEMPERATURE")  # Slightly increased for more detailed responses
     
     # Processing Settings
     chunk_size: int = Field(default=512, env="CHUNK_SIZE")

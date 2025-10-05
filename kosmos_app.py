@@ -1887,7 +1887,7 @@ def render_navbar():
 
 def render_message(role: str, content: str, sources: List[Dict] = None):
     """Render a message using Streamlit's native chat components for better markdown support."""
-    with st.chat_message(role, avatar="👨‍🚀" if role == "user" else "🚀"):
+    with st.chat_message(role, avatar="👨‍🚀" if role == "user" else "�️"):
         # Use st.markdown for proper markdown rendering with all features
         st.markdown(content, unsafe_allow_html=False)
         
@@ -2172,7 +2172,7 @@ def main():
                 Your AI-powered gateway to space biology research
             </p>
             <p style="font-size: 1rem; color: #8b949e; font-weight: 400; max-width: 600px; margin: 0 auto;">
-                Explore 600+ research papers, discover groundbreaking experiments, and unlock insights about life in space
+                I'm K-OSMOS, your dedicated space research assistant with comprehensive access to NASA's space biology research database. I provide extremely detailed information about all space research carried out by NASA, with specific document references and no output limitations.
             </p>
 
         </div>
@@ -2279,13 +2279,13 @@ def main():
     if not st.session_state.messages:
         st.markdown("""
         <div style="text-align: center; padding: 1rem; color: #8b949e; font-size: 0.9rem; margin-bottom: 1rem;">
-            💡 Try asking: "What are the effects of microgravity on bone density?" or "Show me ISS plant experiments"
+            💡 Try asking K-OSMOS: "What are the effects of microgravity on bone density?" or "Show me detailed ISS plant experiments with specific document references"
         </div>
         """, unsafe_allow_html=True)
     
     # Use Streamlit's native chat input
     user_input = st.chat_input(
-        "Ask me about space biology research, experiments, missions, or any specific topics...",
+        "Ask K-OSMOS about any NASA space research, biology experiments, missions, or specific scientific topics - I'll provide extremely detailed responses with document references...",
         disabled=st.session_state.is_processing,
         max_chars=1000
     )
@@ -2327,9 +2327,9 @@ def main():
     # Show enhanced loading indicator if we're processing
     if st.session_state.is_processing:
         # Show typing indicator using native Streamlit chat
-        with st.chat_message("assistant", avatar="🤖"):
-            with st.spinner("🔍 K-OSMOS is analyzing research papers..."):
-                st.write("Searching through space biology research database...")
+        with st.chat_message("assistant", avatar="🛰️"):
+            with st.spinner("🔍 K-OSMOS is analyzing research papers and preparing a comprehensive response..."):
+                st.write("Searching through NASA's space biology research database and preparing detailed information with document references...")
                 st.empty()  # Placeholder for the response
         
         # Get the last user message to process

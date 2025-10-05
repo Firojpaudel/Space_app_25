@@ -386,7 +386,7 @@ def main():
                             else:
                                 st.markdown(f"""
                                 <div class="message-preview assistant-message">
-                                    <strong>🤖 KOSMOS</strong> <span style="color: #6c757d; font-size: 0.8rem;">({format_timestamp(timestamp)})</span><br>
+                                    <strong>🛰️ K-OSMOS</strong> <span style="color: #6c757d; font-size: 0.8rem;">({format_timestamp(timestamp)})</span><br>
                                     {content}
                                 </div>
                                 """, unsafe_allow_html=True)
