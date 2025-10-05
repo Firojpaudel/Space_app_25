@@ -17,27 +17,6 @@ import re
 import numpy as np
 import hashlib
 
-# TTS imports with error handling
-TTS_ENGINE = None
-try:
-    import pyttsx3
-    TTS_ENGINE = pyttsx3.init()
-    # Configure TTS settings
-    voices = TTS_ENGINE.getProperty('voices')
-    if voices:
-        for voice in voices:
-            if 'female' in voice.name.lower() or 'zira' in voice.name.lower():
-                TTS_ENGINE.setProperty('voice', voice.id)
-                break
-    TTS_ENGINE.setProperty('rate', 160)
-    TTS_ENGINE.setProperty('volume', 0.8)
-except ImportError:
-    print("TTS not available: pyttsx3 not installed")
-except Exception as e:
-    print(f"TTS initialization failed: {e}")
-
-
-
 from config.settings import Settings
 from rag_system.chat import SpaceBiologyRAG
 from utils.chat_database import ChatDatabase
@@ -51,7 +30,7 @@ logger = logging.getLogger(__name__)
 # Page configuration
 st.set_page_config(
     page_title="K-OSMOS | Space Biology Knowledge Engine",
-    page_icon="🛰️",
+    page_icon="�",
     layout="wide",
     initial_sidebar_state="auto"
 )
@@ -1887,7 +1866,7 @@ def render_navbar():
 
 def render_message(role: str, content: str, sources: List[Dict] = None):
     """Render a message using Streamlit's native chat components for better markdown support."""
-    with st.chat_message(role, avatar="👨‍🚀" if role == "user" else "�️"):
+    with st.chat_message(role, avatar="👨‍🚀" if role == "user" else "🤖"):
         # Use st.markdown for proper markdown rendering with all features
         st.markdown(content, unsafe_allow_html=False)
         
@@ -2172,7 +2151,7 @@ def main():
                 Your AI-powered gateway to space biology research
             </p>
             <p style="font-size: 1rem; color: #8b949e; font-weight: 400; max-width: 600px; margin: 0 auto;">
-                I'm K-OSMOS, your dedicated space research assistant with comprehensive access to NASA's space biology research database. I provide extremely detailed information about all space research carried out by NASA, with specific document references and no output limitations.
+                🛰️ I'm K-OSMOS, your dedicated space research assistant with comprehensive access to NASA's space biology research database.
             </p>
 
         </div>
@@ -2285,7 +2264,7 @@ def main():
     
     # Use Streamlit's native chat input
     user_input = st.chat_input(
-        "Ask K-OSMOS about any NASA space research, biology experiments, missions, or specific scientific topics - I'll provide extremely detailed responses with document references...",
+        "Ask K-OSMOS about space biology research, experiments, and NASA missions...",
         disabled=st.session_state.is_processing,
         max_chars=1000
     )
@@ -2327,7 +2306,7 @@ def main():
     # Show enhanced loading indicator if we're processing
     if st.session_state.is_processing:
         # Show typing indicator using native Streamlit chat
-        with st.chat_message("assistant", avatar="🛰️"):
+        with st.chat_message("assistant", avatar="🤖"):
             with st.spinner("🔍 K-OSMOS is analyzing research papers and preparing a comprehensive response..."):
                 st.write("Searching through NASA's space biology research database and preparing detailed information with document references...")
                 st.empty()  # Placeholder for the response

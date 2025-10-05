@@ -77,7 +77,7 @@ st.markdown("""
         overflow: hidden;
         box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     }
-    
+    🤖 I'm K-OSMOS, your dedicated space research assistant with comprehensive access to NASA's space biology research database.
     .chat-messages {
         padding: 2rem;
         max-height: 600px;
