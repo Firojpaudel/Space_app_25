@@ -11,7 +11,7 @@ import NASAFacts from '@/components/ui/NASAFacts';
 import { Message, Source } from '@/types';
 
 export default function ChatInterface() {
-  const { messages, addMessage, isLoading, setLoading, currentSession } = useStore();
+  const { messages, addMessage, isLoading, setLoading, currentSession, updateSessionTitle } = useStore();
   const [sources, setSources] = useState<Source[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -35,6 +35,12 @@ export default function ChatInterface() {
 
     addMessage(userMessage);
     setLoading(true);
+
+    // Update session title if this is the first message
+    if (currentSession && currentSession.title === 'New Conversation' && messages.length === 0) {
+      const title = content.length > 50 ? content.substring(0, 47) + '...' : content;
+      updateSessionTitle(currentSession.id, title);
+    }
 
     try {
       const response = await chatAPI.sendMessage(content, currentSession?.id);
