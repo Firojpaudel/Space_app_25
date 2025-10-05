@@ -11,6 +11,8 @@
   **AI-Powered Research Platform for Space Biology Literature**
   
   *Transforming space biology research through intelligent semantic search and conversational AI*
+  
+  **[🚀 Try K-OSMOS Live](https://k-osmos.streamlit.app/)**
 
 </div>
 
@@ -78,6 +80,8 @@ K-OSMOS addresses the critical challenge of knowledge discovery in space biology
 ---
 
 ## Installation
+
+**🚀 Live Demo:** https://k-osmos.streamlit.app/
 
 ### System Requirements
 
