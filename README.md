@@ -101,7 +101,7 @@ We welcome contributions! Fork the repo, create a feature branch, and submit a p
 
 <div align="center">
 
-![K-OSMOS Logo](.github/logo.png)
+<img src=".github/logo.png" width="400px" />
 
 ### Built by Team K-OSMOS for NASA Space Apps 2025
 
