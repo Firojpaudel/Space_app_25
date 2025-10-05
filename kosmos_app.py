@@ -15,6 +15,28 @@ import pandas as pd
 from collections import Counter
 import re
 import numpy as np
+import hashlib
+
+# TTS imports with error handling
+TTS_ENGINE = None
+try:
+    import pyttsx3
+    TTS_ENGINE = pyttsx3.init()
+    # Configure TTS settings
+    voices = TTS_ENGINE.getProperty('voices')
+    if voices:
+        for voice in voices:
+            if 'female' in voice.name.lower() or 'zira' in voice.name.lower():
+                TTS_ENGINE.setProperty('voice', voice.id)
+                break
+    TTS_ENGINE.setProperty('rate', 160)
+    TTS_ENGINE.setProperty('volume', 0.8)
+except ImportError:
+    print("TTS not available: pyttsx3 not installed")
+except Exception as e:
+    print(f"TTS initialization failed: {e}")
+
+
 
 from config.settings import Settings
 from rag_system.chat import SpaceBiologyRAG
@@ -23,6 +45,8 @@ from utils.chat_database import ChatDatabase
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
 
 # Page configuration
 st.set_page_config(
@@ -1280,7 +1304,7 @@ def initialize_rag():
         return None
 
 def create_research_visualizations(messages: List[Dict], sources: List[Dict]) -> Dict[str, Any]:
-    """Create real-time visualizations based on actual research data and conversation."""
+    """Create enhanced, informative visualizations based on actual research data and conversation."""
     viz_data = {}
     
     try:
@@ -1306,18 +1330,29 @@ def create_research_visualizations(messages: List[Dict], sources: List[Dict]) ->
         # Extract topics from current conversation
         all_text = " ".join([msg.get('content', '') for msg in messages])
         
-        # Advanced topic analysis with real data
+        # Enhanced topic analysis with detailed categories for target audiences
         topic_patterns = {
-            'Microgravity Effects': r'\b(microgravity|weightless|zero.?g|gravitational|gravity|weightlessness)\b',
-            'Bone & Muscle Health': r'\b(bone|muscle|skeletal|calcium|osteo|atrophy|density|fracture)\b',
-            'Cardiovascular System': r'\b(heart|cardio|blood|vessel|circulation|pressure|cardiac)\b',
-            'Neurological Studies': r'\b(brain|neural|neuron|nervous|cognitive|memory|sleep)\b',
-            'Plant Biology': r'\b(plant|seed|growth|photosynthesis|agriculture|root|leaf)\b',
-            'Cell & Molecular': r'\b(cell|cellular|stem|regeneration|tissue|protein|gene|dna)\b',
-            'Radiation Effects': r'\b(radiation|cosmic|solar|dose|exposure|radioprotection)\b',
-            'ISS Experiments': r'\b(iss|space.?station|international|experiment|mission)\b',
-            'Animal Studies': r'\b(mouse|mice|rat|rodent|animal|mammal|organism)\b',
-            'Immune System': r'\b(immune|immunity|antibody|infection|inflammation)\b'
+            # For Scientists generating new hypotheses
+            'Microgravity Physiology': r'\b(microgravity|weightless|zero.?g|gravitational|gravity|weightlessness|fluid.?shift)\b',
+            'Bone & Muscle Health': r'\b(bone|muscle|skeletal|calcium|osteo|atrophy|density|fracture|remodeling|myopathy)\b',
+            'Cardiovascular System': r'\b(heart|cardio|blood|vessel|circulation|pressure|cardiac|orthostatic|arrhythmia)\b',
+            'Neurological & Cognitive': r'\b(brain|neural|neuron|nervous|cognitive|memory|sleep|vestibular|spatial)\b',
+            
+            # For Mission architects planning Moon/Mars missions
+            'Space Agriculture': r'\b(plant|seed|growth|photosynthesis|agriculture|root|leaf|crop|food.?production)\b',
+            'Life Support Systems': r'\b(life.?support|atmosphere|air|water|recycling|closed.?loop|habitat)\b',
+            'Radiation Protection': r'\b(radiation|cosmic|solar|dose|exposure|radioprotection|shielding|SPE)\b',
+            'Human Factors': r'\b(crew|astronaut|psychology|isolation|confinement|team|behavior|performance)\b',
+            
+            # For Managers identifying investment opportunities
+            'Biomedical Technology': r'\b(biomarker|diagnostic|therapeutic|drug|countermeasure|medical.?device)\b',
+            'Cell & Tissue Engineering': r'\b(cell|cellular|stem|regeneration|tissue|protein|gene|dna|organoid)\b',
+            'ISS Research Platform': r'\b(iss|space.?station|international|experiment|mission|microgravity.?research)\b',
+            'Commercial Applications': r'\b(pharmaceutical|biotechnology|crystal|protein.?crystallization|manufacturing)\b',
+            
+            # Additional categories for comprehensive analysis
+            'Animal Models': r'\b(mouse|mice|rat|rodent|animal|mammal|organism|model.?system)\b',
+            'Immune System': r'\b(immune|immunity|antibody|infection|inflammation|cytokine|T.?cell)\b'
         }
         
         topic_counts = {}
@@ -1338,100 +1373,180 @@ def create_research_visualizations(messages: List[Dict], sources: List[Dict]) ->
                     if re.search(pattern, combined_text, re.IGNORECASE):
                         topic_counts[topic] = topic_counts.get(topic, 0) + 1
         
-        # Create enhanced topic distribution
+        # Create enhanced topic distribution with audience-relevant insights
         if topic_counts:
-            # Sort by frequency and take top 8
-            sorted_topics = dict(sorted(topic_counts.items(), key=lambda x: x[1], reverse=True)[:8])
+            # Sort by frequency and take top 10 for better diversity
+            sorted_topics = dict(sorted(topic_counts.items(), key=lambda x: x[1], reverse=True)[:10])
             
-            colors = ['#58a6ff', '#7c3aed', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16']
+            # Enhanced color palette for better visual distinction
+            colors = ['#58a6ff', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6366f1']
             
-            fig_topics = go.Figure(data=[
-                go.Bar(
-                    x=list(sorted_topics.keys()),
-                    y=list(sorted_topics.values()),
-                    marker_color=colors[:len(sorted_topics)],
-                    text=list(sorted_topics.values()),
-                    textposition='auto',
-                    hovertemplate='<b>%{x}</b><br>Mentions: %{y}<extra></extra>'
-                )
-            ])
+            # Create enhanced bar chart with better information
+            fig_topics = go.Figure()
+            
+            # Add bars with enhanced styling
+            fig_topics.add_trace(go.Bar(
+                x=list(sorted_topics.keys()),
+                y=list(sorted_topics.values()),
+                marker=dict(
+                    color=colors[:len(sorted_topics)],
+                    line=dict(color='rgba(255,255,255,0.3)', width=1)
+                ),
+                text=[f"{v} mentions" for v in sorted_topics.values()],
+                textposition='auto',
+                textfont=dict(size=10, color='white'),
+                hovertemplate='<b>%{x}</b><br>' +
+                            'Mentions: %{y}<br>' +
+                            'Relevance to session: %{customdata}%<extra></extra>',
+                customdata=[round((v/max(sorted_topics.values()))*100) for v in sorted_topics.values()]
+            ))
             
             fig_topics.update_layout(
                 title=dict(
-                    text="🔬 Research Topics in Current Session",
-                    font=dict(size=16, color='#f0f6fc'),
-                    x=0.5
+                    text="🎯 Research Focus Areas - Strategic Insights",
+                    font=dict(size=18, color='#f0f6fc', family='Inter'),
+                    x=0.5,
+                    subtitle=dict(
+                        text="Key topics identified for Scientists, Mission Architects, and Investment Managers",
+                        font=dict(size=12, color='#8b949e')
+                    )
                 ),
                 plot_bgcolor='rgba(13, 17, 23, 0.8)',
                 paper_bgcolor='rgba(13, 17, 23, 0.8)',
                 font=dict(color='#f0f6fc', family='Inter'),
                 xaxis=dict(
-                    title="Research Areas",
-                    tickangle=-45,
-                    gridcolor='rgba(48, 54, 61, 0.5)'
+                    title="Research Areas (Ordered by Relevance)",
+                    tickangle=-35,
+                    gridcolor='rgba(48, 54, 61, 0.5)',
+                    tickfont=dict(size=10)
                 ),
                 yaxis=dict(
-                    title="Frequency",
-                    gridcolor='rgba(48, 54, 61, 0.5)'
+                    title="Discussion Frequency",
+                    gridcolor='rgba(48, 54, 61, 0.5)',
+                    tickfont=dict(size=10)
                 ),
-                margin=dict(l=60, r=20, t=60, b=100),
-                height=400
+                margin=dict(l=80, r=40, t=100, b=120),
+                height=450,
+                showlegend=False
             )
+            
+            # Add annotations for top 3 topics
+            for i, (topic, count) in enumerate(list(sorted_topics.items())[:3]):
+                if i == 0:
+                    annotation_text = "🥇 Primary Focus"
+                elif i == 1:
+                    annotation_text = "🥈 Secondary Interest"
+                else:
+                    annotation_text = "🥉 Supporting Area"
+                
+                fig_topics.add_annotation(
+                    x=topic,
+                    y=count + max(sorted_topics.values()) * 0.05,
+                    text=annotation_text,
+                    showarrow=True,
+                    arrowhead=2,
+                    arrowcolor=colors[i],
+                    font=dict(size=9, color=colors[i])
+                )
+            
             viz_data['topics'] = fig_topics
         
-        # Enhanced source relevance with real data
+        # Enhanced source relevance with strategic insights
         if sources:
-            # Filter and process sources
-            valid_sources = [s for s in sources if s.get('score', 0) > 0.3][:10]  # Top 10 relevant sources
+            # Filter and process sources including web sources
+            valid_sources = [s for s in sources if s.get('score', 0) > 0.2][:10]  # Top 10 relevant sources
             
             if valid_sources:
                 scores = [s.get('score', 0) * 100 for s in valid_sources]
                 titles = []
+                source_types = []
+                
                 for s in valid_sources:
                     title = s.get('title', 'Unknown Paper')
+                    source_type = s.get('source_type', 'research')
+                    
+                    # Add type indicator to title
+                    if source_type == 'web':
+                        title = f"🌐 {title}"
+                    elif source_type == 'image_source':
+                        title = f"🖼️ {title}"
+                    else:
+                        title = f"📄 {title}"
+                    
                     # Truncate long titles
-                    if len(title) > 40:
-                        title = title[:40] + "..."
+                    if len(title) > 50:
+                        title = title[:50] + "..."
                     titles.append(title)
+                    source_types.append(source_type)
                 
-                # Create horizontal bar chart for better readability
-                fig_relevance = go.Figure(data=[
-                    go.Bar(
-                        x=scores,
-                        y=titles,
-                        orientation='h',
-                        marker=dict(
-                            color=scores,
-                            colorscale='Viridis',
-                            showscale=True,
-                            colorbar=dict(title="Relevance %")
-                        ),
-                        text=[f"{score:.1f}%" for score in scores],
-                        textposition='auto',
-                        hovertemplate='<b>%{y}</b><br>Relevance: %{x:.1f}%<extra></extra>'
-                    )
-                ])
+                # Create enhanced horizontal bar chart
+                fig_relevance = go.Figure()
+                
+                # Color mapping for different source types
+                color_map = {
+                    'web': '#10b981',
+                    'image_source': '#f59e0b', 
+                    'research': '#58a6ff'
+                }
+                
+                colors = [color_map.get(st, '#58a6ff') for st in source_types]
+                
+                fig_relevance.add_trace(go.Bar(
+                    x=scores,
+                    y=titles,
+                    orientation='h',
+                    marker=dict(
+                        color=colors,
+                        line=dict(color='rgba(255,255,255,0.3)', width=1)
+                    ),
+                    text=[f"{score:.0f}%" for score in scores],
+                    textposition='inside',
+                    textfont=dict(size=10, color='white'),
+                    hovertemplate='<b>%{y}</b><br>' +
+                                'Relevance: %{x:.1f}%<br>' +
+                                'Source Type: %{customdata}<extra></extra>',
+                    customdata=[st.replace('_', ' ').title() for st in source_types]
+                ))
                 
                 fig_relevance.update_layout(
                     title=dict(
-                        text="📊 Source Relevance Scores",
-                        font=dict(size=16, color='#f0f6fc'),
-                        x=0.5
+                        text="🎯 Source Quality & Relevance Analysis",
+                        font=dict(size=18, color='#f0f6fc', family='Inter'),
+                        x=0.5,
+                        subtitle=dict(
+                            text="Multi-source intelligence: Research papers, web resources, and visual content",
+                            font=dict(size=12, color='#8b949e')
+                        )
                     ),
                     plot_bgcolor='rgba(13, 17, 23, 0.8)',
                     paper_bgcolor='rgba(13, 17, 23, 0.8)',
                     font=dict(color='#f0f6fc', family='Inter'),
                     xaxis=dict(
-                        title="Relevance Score (%)",
-                        gridcolor='rgba(48, 54, 61, 0.5)'
+                        title="AI-Assessed Relevance Score (%)",
+                        gridcolor='rgba(48, 54, 61, 0.5)',
+                        range=[0, 100],
+                        tickfont=dict(size=10)
                     ),
                     yaxis=dict(
-                        title="Research Papers",
-                        gridcolor='rgba(48, 54, 61, 0.5)'
+                        title="Information Sources",
+                        gridcolor='rgba(48, 54, 61, 0.5)',
+                        tickfont=dict(size=9)
                     ),
-                    margin=dict(l=200, r=20, t=60, b=40),
-                    height=400
+                    margin=dict(l=250, r=40, t=100, b=60),
+                    height=450,
+                    showlegend=False
                 )
+                
+                # Add quality threshold annotations
+                fig_relevance.add_vline(
+                    x=80, line_dash="dash", line_color="#10b981",
+                    annotation_text="High Quality Threshold", annotation_position="top"
+                )
+                fig_relevance.add_vline(
+                    x=60, line_dash="dash", line_color="#f59e0b",
+                    annotation_text="Moderate Quality", annotation_position="top"
+                )
+                
                 viz_data['relevance'] = fig_relevance
         
         # Enhanced journal distribution with real data
@@ -1633,15 +1748,37 @@ def render_visualizations(messages: List[Dict], all_sources: List[Dict]):
                     if tab_key in viz_data:
                         st.plotly_chart(viz_data[tab_key], use_container_width=True, key=f"chart_{tab_key}")
                         
-                        # Add insights based on the chart
+                        # Add strategic insights based on target audience
                         if tab_key == 'topics':
-                            st.markdown("**💡 Insights:** Topics mentioned most frequently in your conversation.")
+                            st.markdown("""
+                            **🎯 Strategic Insights for Target Audiences:**
+                            - **Scientists:** Focus areas show potential hypothesis generation opportunities
+                            - **Mission Architects:** Key research areas relevant for Moon/Mars mission planning
+                            - **Investment Managers:** Trending topics indicate promising R&D investment areas
+                            """)
                         elif tab_key == 'relevance':
-                            st.markdown("**💡 Insights:** Most relevant research papers for your queries.")
+                            high_relevance = len([s for s in sources if s.get('score', 0) > 0.8])
+                            web_sources = len([s for s in sources if s.get('source_type') == 'web'])
+                            st.markdown(f"""
+                            **� Source Quality Analysis:**
+                            - **{high_relevance}** high-relevance sources (>80% match)
+                            - **{web_sources}** web-based resources for additional context
+                            - Multi-source approach provides comprehensive coverage
+                            """)
                         elif tab_key == 'journals':
-                            st.markdown("**💡 Insights:** Leading journals in the retrieved research.")
+                            st.markdown("""
+                            **� Publication Landscape Insights:**
+                            - Leading journals indicate research quality and impact
+                            - Journal diversity shows interdisciplinary research opportunities
+                            - Key publication venues for staying current with developments
+                            """)
                         elif tab_key == 'timeline':
-                            st.markdown("**💡 Insights:** Publication timeline of relevant research.")
+                            st.markdown("""
+                            **� Research Trend Analysis:**
+                            - Publication patterns reveal research momentum
+                            - Recent activity indicates current scientific priorities
+                            - Historical perspective shows field evolution and maturity
+                            """)
         else:
             st.info(" ℹ️ Analytics will appear as you explore research topics!")
 
@@ -1754,7 +1891,8 @@ def render_message(role: str, content: str, sources: List[Dict] = None):
         # Use st.markdown for proper markdown rendering with all features
         st.markdown(content, unsafe_allow_html=False)
         
-        # Enhanced Sources section for assistant messages
+
+        # Enhanced Sources section with tabs for different source types
         if role == "assistant" and sources and len(sources) > 0:
             # Filter and clean sources
             valid_sources = []
@@ -1784,31 +1922,72 @@ def render_message(role: str, content: str, sources: List[Dict] = None):
             
             if unique_sources:
                 st.markdown("---")
-                st.markdown("**📚 Research Sources**")
+                st.markdown("### Research Sources")
                 
-                # Display sources in a clean format
-                for i, source in enumerate(unique_sources[:4], 1):
-                    try:
-                        title = str(source.get('title', 'Unknown Title')).strip()
-                        if not title or len(title) < 5:
-                            continue
+                # Only show research papers
+                research_papers = [s for s in unique_sources if s.get('source_type', 'research') == 'research']
+                
+                
+                # Research Papers content
+                if research_papers:
+                    for i, source in enumerate(research_papers[:10], 1):
+                        try:
+                            title = str(source.get('title', 'Unknown Title')).strip()
+                            if not title or len(title) < 5:
+                                continue
                             
-                        authors = source.get('authors', 'Unknown Authors')
-                        if isinstance(authors, list):
-                            authors = ', '.join(str(a) for a in authors[:2] if a)
-                        
-                        relevance = int((source.get('score', 0) * 100))
-                        url = source.get('url', '#')
-                        
-                        # Create an expander for each source
-                        with st.expander(f"📄 {title[:60]}{'...' if len(title) > 60 else ''} ({relevance}% match)"):
-                            st.write(f"**Authors:** {authors}")
-                            if url != '#':
-                                st.markdown(f"**Link:** [📖 View Paper]({url})")
-                            st.write(f"**Relevance Score:** {relevance}%")
-                    
-                    except Exception as e:
-                        continue
+                            authors = source.get('authors', 'Unknown Authors')
+                            if isinstance(authors, list):
+                                authors = ', '.join(str(a) for a in authors[:3] if a)
+                            
+                            relevance = int((source.get('score', 0) * 100))
+                            url = source.get('url', '#')
+                            journal = source.get('journal', 'Unknown Journal')
+                            year = source.get('year', 'N/A')
+                            
+                            # Simple card layout without complex nesting
+                            with st.expander(f"📄 **{i}.** {title[:60]}{'...' if len(title) > 60 else ''} **({relevance}%)**"):
+                                col1, col2 = st.columns([3, 1])
+                                
+                                with col1:
+                                    st.markdown(f"**📝 Type:** Research Paper")
+                                    st.markdown(f"**✍️ Authors:** {authors}")
+                                    st.markdown(f"**📚 Journal:** {journal}")
+                                    
+                                    # Add link if available
+                                    if url and url != '#':
+                                        st.markdown(f"🔗 **[View Full Source]({url})**")
+                                    
+                                    with col2:
+                                        st.markdown(f"""
+                                        <div style="
+                                            background: rgba(88, 166, 255, 0.1);
+                                            border: 1px solid rgba(88, 166, 255, 0.3);
+                                            border-radius: 8px;
+                                            padding: 0.75rem;
+                                            text-align: center;
+                                        ">
+                                            <div style="color: #58a6ff; font-weight: 600; font-size: 1.1rem;">
+                                                {relevance}%
+                                            </div>
+                                            <div style="color: #8b949e; font-size: 0.8rem;">
+                                                Research Match
+                                            </div>
+                                        </div>
+                                        """, unsafe_allow_html=True)
+                                        
+                                    # Add description if available
+                                    description = source.get('description', '')
+                                    if description:
+                                        st.markdown(f"**📝 Description:** {description}")
+                            
+                        except Exception as e:
+                            continue
+                else:
+                    st.info("📄 No research papers found for this query.")
+
+
+
 
 def render_sidebar(db: ChatDatabase, current_session_id: str = None):
     """Render sidebar with chat history - only if user has chat history."""
@@ -1995,6 +2174,7 @@ def main():
             <p style="font-size: 1rem; color: #8b949e; font-weight: 400; max-width: 600px; margin: 0 auto;">
                 Explore 600+ research papers, discover groundbreaking experiments, and unlock insights about life in space
             </p>
+
         </div>
         """, unsafe_allow_html=True)
         
