@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 # Page configuration
 st.set_page_config(
     page_title="K-OSMOS | Space Biology Knowledge Engine",
-    page_icon="�",
+    page_icon="logo.png",
     layout="wide",
     initial_sidebar_state="auto"
 )

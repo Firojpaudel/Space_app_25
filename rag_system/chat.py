@@ -93,29 +93,53 @@ Content Excerpt: {content}...
         if not conversation_history:
             return query
         
-        # Get recent relevant context (last 2-3 user messages)
+        # Get recent relevant context (focus on last few exchanges)
         recent_topics = []
-        for msg in conversation_history[-6:]:  # Last 6 messages
+        context_terms = []
+        
+        # Look at recent conversation for context
+        for msg in conversation_history[-8:]:  # Last 8 messages (4 exchanges)
+            content = msg['content'].lower()
+            
+            # Extract key space biology terms and concepts
+            keywords = [
+                'microgravity', 'space', 'bone', 'muscle', 'plant', 'cell', 'radiation', 
+                'astronaut', 'iss', 'mission', 'experiment', 'tissue', 'growth', 'protein',
+                'cardiovascular', 'heart', 'blood', 'neural', 'brain', 'kidney', 'renal',
+                'immune', 'metabolism', 'calcium', 'osteo', 'fluid', 'gravity', 'cosmic',
+                'mars', 'moon', 'spacecraft', 'habitat', 'countermeasure', 'biomarker'
+            ]
+            
+            for keyword in keywords:
+                if keyword in content:
+                    recent_topics.append(keyword)
+            
+            # Also capture specific research areas or technical terms mentioned
             if msg['role'] == 'user':
-                # Extract key terms from previous questions
-                content = msg['content'].lower()
-                # Look for space biology terms
-                terms = []
-                keywords = ['microgravity', 'space', 'bone', 'muscle', 'plant', 'cell', 'radiation', 
-                           'astronaut', 'iss', 'mission', 'experiment', 'tissue', 'growth', 'protein']
-                for keyword in keywords:
-                    if keyword in content:
-                        terms.append(keyword)
-                if terms:
-                    recent_topics.extend(terms)
+                # Look for specific questions or focus areas
+                words = content.split()
+                for i, word in enumerate(words):
+                    if word in ['effects', 'impact', 'changes', 'function', 'health', 'research', 'studies']:
+                        # Capture surrounding context
+                        start = max(0, i-2)
+                        end = min(len(words), i+3)
+                        phrase = ' '.join(words[start:end])
+                        if len(phrase) > 5:
+                            context_terms.append(phrase)
         
-        # Enhance query with context if we found relevant terms
+        # Build enhanced query with context
+        enhanced_parts = [query]
+        
         if recent_topics:
-            unique_topics = list(set(recent_topics))[:3]  # Max 3 context terms
-            enhanced_query = f"{query} (related to: {', '.join(unique_topics)})"
-            return enhanced_query
+            unique_topics = list(set(recent_topics))[:4]  # Max 4 context terms
+            enhanced_parts.append(f"(building on discussion of: {', '.join(unique_topics)})")
         
-        return query
+        if context_terms:
+            # Add the most recent context term
+            enhanced_parts.append(f"(continuing topic: {context_terms[-1]})")
+        
+        enhanced_query = ' '.join(enhanced_parts)
+        return enhanced_query
     
     def _create_prompt(self, query: str, context: str, conversation_history: List[Dict[str, str]] = None) -> str:
         """Create a comprehensive prompt for the LLM."""
@@ -123,13 +147,53 @@ Content Excerpt: {content}...
         # Build conversation context
         conversation_context = ""
         if conversation_history:
-            conversation_context = "\n\nPrevious Conversation:\n"
-            for msg in conversation_history[-6:]:  # Last 6 messages (3 exchanges)
-                role = "Human" if msg['role'] == 'user' else "Assistant"
-                conversation_context += f"{role}: {msg['content'][:300]}...\n"
-            conversation_context += "\n"
+            conversation_context = "\n\nPrevious Conversation Context:\n"
+            for msg in conversation_history[-8:]:  # Last 8 messages (4 exchanges) for better context
+                role = "Human" if msg['role'] == 'user' else "K-OSMOS"
+                conversation_context += f"{role}: {msg['content'][:400]}...\n"
+            conversation_context += "\nCurrent follow-up question:\n"
         
-        return f"""Greetings! I am K-OSMOS (Knowledge-Oriented Space Medicine Operations System), your dedicated space research assistant with comprehensive access to NASA's space biology research database and extensive knowledge of all space research carried out by NASA and international space agencies.
+        # Generate versatile openings based on query type and context
+        opening_variations = [
+            "Absolutely! As K-OSMOS, I can dive deep into that topic",
+            "Excellent question! Let me provide comprehensive insights from my research database",
+            "I'm excited to explore this with you! Drawing from my extensive space biology archives",
+            "That's a fascinating area of research! Allow me to share detailed findings",
+            "Perfect timing for this question! My database contains extensive information on this topic",
+            "Great inquiry! I can provide you with comprehensive research-backed information",
+            "This is exactly the kind of question I excel at! Let me analyze the research for you",
+            "Wonderful question! I have access to extensive studies on this subject",
+            "I love questions like this! My research repository has detailed information to share",
+            "Fantastic topic to explore! Drawing from NASA's research archives, I can tell you"
+        ]
+        
+        # Check if this is a follow-up question
+        is_followup = bool(conversation_history and len(conversation_history) > 0)
+        
+        if is_followup:
+            followup_openings = [
+                "Building on our previous discussion,",
+                "To expand on that topic further,", 
+                "Following up on your question,",
+                "Let me dive deeper into that aspect",
+                "Continuing our exploration of this subject,",
+                "To provide more detail on that point,",
+                "Excellent follow-up! Let me elaborate further",
+                "That's a great continuation of our discussion",
+                "Perfect follow-up question! Let me add more depth",
+                "Building upon what we discussed,"
+            ]
+            # Use hash of query for consistent but varied selection
+            import hashlib
+            query_hash = int(hashlib.md5(query.encode()).hexdigest(), 16)
+            selected_opening = followup_openings[query_hash % len(followup_openings)]
+        else:
+            # Use hash of query for consistent but varied selection
+            import hashlib
+            query_hash = int(hashlib.md5(query.encode()).hexdigest(), 16)
+            selected_opening = opening_variations[query_hash % len(opening_variations)]
+        
+        return f"""I am K-OSMOS (Knowledge-Oriented Space Medicine Operations System), your dedicated space research assistant with comprehensive access to NASA's space biology research database and extensive knowledge of all space research carried out by NASA and international space agencies.
 
 As K-OSMOS, I specialize in providing extremely detailed, comprehensive information about space biology research, experiments, missions, and scientific discoveries based on my extensive database of scientific publications and research documents.
 
@@ -156,12 +220,13 @@ As K-OSMOS, I specialize in providing extremely detailed, comprehensive informat
 🌐 **Web Search Requests** - If asked to search the web, I'll politely explain that web search capabilities are coming in future releases
 
 **Critical Instructions for K-OSMOS:**
-1. **ALWAYS start responses with** "Greetings! As K-OSMOS, I can provide you with comprehensive information..."
+1. **START with the selected opening** "{selected_opening}" followed by detailed information
 2. **ALWAYS mention specific document references** using format "According to Document X (Reference ID: DOC-XXX)" or "As detailed in the research by [Author] in Document Y"
 3. **PROVIDE EXTREMELY DETAILED responses** - use the full 8192 token limit if needed, never cut responses short
 4. **NO OUTPUT LIMITATIONS** - provide complete, comprehensive analysis with full scientific detail
 5. **CITE SOURCES THROUGHOUT** - reference documents multiple times throughout the response, not just at the end
-6. **WEB SEARCH REQUESTS** - If asked to search the web or access online resources, respond cutely: "While I'd love to surf the web for you 🌐✨, my creators are working on web search capabilities for future releases! Stay tuned for exciting updates! For now, let me provide you with comprehensive information from my extensive research database..."
+6. **MAINTAIN CONVERSATION CONTEXT** - If this is a follow-up question, reference previous discussion appropriately and build upon it
+7. **WEB SEARCH REQUESTS** - If asked to search the web or access online resources, respond cutely: "While I'd love to surf the web for you 🌐✨, my creators are working on web search capabilities for future releases! Stay tuned for exciting updates! For now, let me provide you with comprehensive information from my extensive research database..."
 
 **K-OSMOS Comprehensive Response:**"""
 
@@ -179,9 +244,12 @@ As K-OSMOS, I specialize in providing extremely detailed, comprehensive informat
         """
         try:
             logger.info(f"Processing RAG query: {query}")
+            if conversation_history:
+                logger.info(f"Using conversation context with {len(conversation_history)} previous messages")
             
             # 1. Enhance query with conversation context if available
             enhanced_query = self._enhance_query_with_context(query, conversation_history)
+            logger.info(f"Enhanced query: {enhanced_query}")
             
             # 2. Retrieve relevant documents (get more for better diversity)
             documents = await self.search_similar_documents(enhanced_query, top_k)
@@ -189,10 +257,10 @@ As K-OSMOS, I specialize in providing extremely detailed, comprehensive informat
             # 3. Format context from research documents
             context = self._format_context(documents)
             
-            # 5. Create prompt with conversation history
+            # 4. Create prompt with conversation history
             prompt = self._create_prompt(query, context, conversation_history)
             
-            # 6. Generate response with Gemini
+            # 5. Generate response with Gemini
             response = await self._generate_response(prompt)
             
             # 6. Format sources (includes deduplication and returns top 10 unique)
@@ -202,6 +270,7 @@ As K-OSMOS, I specialize in providing extremely detailed, comprehensive informat
                 "response": response,
                 "sources": sources,
                 "query": query,
+                "enhanced_query": enhanced_query,
                 "num_sources": len(sources),
                 "success": True
             }
@@ -237,9 +306,9 @@ As K-OSMOS, I specialize in providing extremely detailed, comprehensive informat
             response_text = response.text
             response_text = self._clean_response_content(response_text)
             
-            # Ensure K-OSMOS introduces itself if not already done
-            if not response_text.startswith("Greetings!") and not "K-OSMOS" in response_text[:200]:
-                response_text = f"Greetings! As K-OSMOS, your space research assistant, I can provide you with comprehensive information on this topic.\n\n{response_text}"
+            # Ensure K-OSMOS identifies itself in the response (but allow for versatile openings)
+            if not "K-OSMOS" in response_text[:300]:
+                response_text = f"As K-OSMOS, your space research assistant, I can provide comprehensive information on this topic.\n\n{response_text}"
             
             return response_text
             
